@@ -28,13 +28,18 @@ user@computer:~/path/to/PyQtGame$ python3 main.py
 ```
 
 ## Developing
-If you're developing, install matplotlib for plotting the geometric functions as well as the PyQt tools like Qt Designer.
+If you're developing, install PyQt tools to get Qt Designer for editing the UI files.
 ```
-pip3 install matplotlib
 pip3 install pyqt5-tools
 ```
 
 ### Compiling C library for collision checking
+Use the cc compiler for creating the required libraries.
+On linux:
 ```
 cc -fPIC -shared -o cc_lib.so collision_check.c
+```
+On Windows:
+```
+cc -fPIC -shared -o cc_lib.dll collision_check.c
 ```

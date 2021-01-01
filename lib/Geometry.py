@@ -10,12 +10,6 @@ from multiprocessing import Process, Pool
 
 from lib import Utils
 
-try:
-    from matplotlib import pyplot as plt
-    from matplotlib import patches
-except:
-    log('Matplot lib import skipped...')
-
 def px_to_m(pixels):
     '''
     Converts pixels to meters using the M1 Abrams as a reference
