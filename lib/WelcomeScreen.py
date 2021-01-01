@@ -17,13 +17,19 @@ class WelcomeScreen(QtWidgets.QWidget,Utils.FilePaths):
         self.list_maps()
 
     def list_save_games(self):
-        save_files = os.listdir(f'{self.saves_path}')
-        self.logger.log(f'Save files found: {save_files}')
+        try:
+            save_files = os.listdir(f'{self.saves_path}')
+            self.logger.log(f'Save files found: {save_files}')
 
-        if len(save_files) == 0:
-            self.save_files_combobox.addItem('None')
-        else:
-            self.save_files_combobox.addItems(save_files)
+            if len(save_files) == 0:
+                self.save_files_combobox.addItem('None')
+            else:
+                self.save_files_combobox.addItems(save_files)
+                
+        except FileNotFoundError:
+            self.logger.log(f'Creating saves folder...')
+            os.mkdir(f'{self.saves_path}')
+            self.list_save_games()
 
     def list_maps(self):
         map_files = os.listdir(f'{self.maps_path}')

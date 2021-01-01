@@ -36,6 +36,10 @@ class PauseMenu(QtWidgets.QWidget,Utils.FilePaths):
     def quit_game(self):
         self.quit_signal.emit()
 
+    def closeEvent(self, event):
+        self.pause_signal.emit()
+        event.accept()
+
     def keyPressEvent(self, event):
         self.logger.log(f'Key Pressed: {event.key()}')
 
