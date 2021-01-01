@@ -28,9 +28,6 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
         self.shells = []
 
-        self.physics_time = time.time()
-        self.prev_physics_time = time.time()
-
         self.canvas = QtWidgets.QLabel()
         self.layout.addWidget(self.canvas)
 
@@ -99,11 +96,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             self.pixmap = QtGui.QPixmap(self.width,self.height)
             self.canvas.setPixmap(self.pixmap)
 
-    def update_physics(self):
-        self.physics_time = time.time()
-        delta_t = self.physics_time - self.prev_physics_time
-        self.prev_physics_time = self.physics_time
-
+    def update_physics(self,delta_t):
         self.process_key_presses()
 
         ### Update tanks movement
@@ -137,7 +130,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             shell.physics.accelerate(forces,delta_t)
             shell.update_position([self.map])
 
-    def update_canvas(self):
+    def update_canvas(self,fps):
         self.painter = QtGui.QPainter(self.canvas.pixmap())
 
         self.background_painter(self.painter)
@@ -150,6 +143,8 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
         for shell in self.shells:
             shell.draw_shell(self.painter)
+
+        self.painter.drawText(0,10,'FPS: %.2f'%(fps))
 
         self.painter.end()
         self.repaint()

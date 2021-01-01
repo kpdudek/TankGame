@@ -12,9 +12,8 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.fps = fps
         self.logger = logger
         self.fps_actual = 0.0
-        self.fps_log_interval = 5.0
-        self.prev_loop_time = time.time()
         self.is_paused = False
+        self.prev_loop_tic = time.time()
 
         self.screen_height = screen.size().height()
         self.screen_width = screen.size().width()
@@ -78,19 +77,18 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
 
     def game_loop(self):
         tic = time.time()
+        delta_t = tic - self.prev_loop_tic
+        
         if not self.is_paused:
             self.loop_count += 1
             self.canvas.set_pixmap()
-            self.canvas.update_physics()
-            self.canvas.update_canvas()
+            self.canvas.update_physics(delta_t)
+            self.canvas.update_canvas(self.fps_actual)
         toc = time.time()
         
         try:
             self.fps_actual = 1.0/(toc-tic)
-            if (toc - self.prev_loop_time) > self.fps_log_interval:
-                self.logger.log(f'Max fps: {self.fps_actual}')
-                self.prev_loop_time = toc
         except ZeroDivisionError:
             pass
 
-        
+        self.prev_loop_tic = tic
