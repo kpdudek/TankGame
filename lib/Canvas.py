@@ -28,6 +28,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
         self.shells = []
 
+        self.map = None
+
+        self.collision_bodies = []
+
         self.canvas = QtWidgets.QLabel()
         self.layout.addWidget(self.canvas)
 
@@ -40,9 +44,11 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.logger.log(f'Mouse Press: {e.button()} {e.x()} {e.y()}')
         self.mouse_pose = numpy.array([[e.x()],[e.y()]])
         
-        selected_entity = Geometry.point_is_collision(self.tanks[0].collision_geometry,self.mouse_pose)
-        if selected_entity:
-            self.logger.log(f'Mouse collided with: {self.tanks[0].collision_geometry.game_id}')
+        self.collision_bodies = self.tanks + self.shells + [self.map]
+        for body in self.collision_bodies:
+            selected_entity = Geometry.point_is_collision(body.collision_geometry,self.mouse_pose)
+            if selected_entity:
+                self.logger.log(f'Mouse collided with: {body.collision_geometry.game_id}')
     
     def mouseMoveEvent(self,e):
         pass
@@ -95,7 +101,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             self.height = height
             self.pixmap = QtGui.QPixmap(self.width,self.height)
             self.canvas.setPixmap(self.pixmap)
-
+    
     def update_physics(self,delta_t):
         self.process_key_presses()
 
@@ -131,6 +137,8 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             shell.update_position([self.map])
 
     def update_canvas(self,fps):
+        self.fps = fps
+
         self.painter = QtGui.QPainter(self.canvas.pixmap())
 
         self.background_painter(self.painter)
@@ -144,7 +152,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for shell in self.shells:
             shell.draw_shell(self.painter)
 
-        self.painter.drawText(0,10,'FPS: %.2f'%(fps))
+        self.painter.drawText(3,13,'FPS: %.0f'%(fps))
 
         self.painter.end()
         self.repaint()

@@ -78,7 +78,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
     def game_loop(self):
         tic = time.time()
         delta_t = tic - self.prev_loop_tic
-        
+
         if not self.is_paused:
             self.loop_count += 1
             self.canvas.set_pixmap()

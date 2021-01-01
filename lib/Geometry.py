@@ -122,17 +122,23 @@ def point_is_collision(poly,point):
     '''
     Check if the point lies inside a polygon
     '''
-    result = False
-    r,c = poly.vertices.shape
+    row,col = poly.vertices.shape
     vertices = poly.vertices.copy()
     
-    for idx in range(0,c):
-        if idx == c-1:
+    for idx in range(0,col):
+        if idx == col-1:
             edge = np.concatenate((vertices[:,idx].reshape(2,1),vertices[:,0].reshape(2,1)),axis=1)
         else:
             edge = np.concatenate((vertices[:,idx].reshape(2,1),vertices[:,idx+1].reshape(2,1)),axis=1)
+        a = -(edge[1,1] - edge[1,0])
+        b = edge[0,1] - edge[0,0]
+        c = -(a*edge[0,0] + b*edge[1,0])
 
-    return result
+        value = a*float(point[0]) + float(b*point[1]) + c
+        if value < 0:
+            return False
+
+    return True
 
 def sphere_is_collision(poly1,poly2):
     '''
