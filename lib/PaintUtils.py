@@ -13,6 +13,8 @@ class Colors():
     white = '#FFFFFF'
     forest_green = '#38690E'
     gray = '#353535'
+    light_gray = '#BDBDBD'
+    black = '#000000'
 
 class PaintBrushes():
     def __init__(self):
@@ -42,6 +44,18 @@ class PaintBrushes():
         painter.setPen(pen)
         painter.setBrush(brush)
 
+    def tank_debug_painter(self,painter,color):
+        pen = QtGui.QPen()
+        pen.setWidth(0)
+        pen.setColor(QColor(color))
+
+        brush = QtGui.QBrush()
+        brush.setColor(QColor(color))
+        brush.setStyle(Qt.NoBrush)
+
+        painter.setPen(pen)
+        painter.setBrush(brush)
+
     def shell_painter(self,painter):
         pen = QtGui.QPen()
         pen.setWidth(0)
@@ -66,17 +80,29 @@ class PaintBrushes():
         painter.setPen(pen)
         painter.setBrush(brush)
 
+    def text_painter(self,painter):
+        pen = QtGui.QPen()
+        pen.setWidth(0)
+        pen.setColor(QColor(self.black))
+
+        brush = QtGui.QBrush()
+        brush.setColor(QColor(self.black))
+        brush.setStyle(Qt.SolidPattern)
+
+        painter.setPen(pen)
+        painter.setBrush(brush)
+
 class DarkColors(Colors):
     def __init__(self):
         super().__init__()
         self.palette = QPalette()
         self.palette.setColor(QPalette.Window, QColor(self.gray))
-        self.palette.setColor(QPalette.WindowText, Qt.white)
+        self.palette.setColor(QPalette.WindowText, QColor(self.light_gray))#Qt.white)
         self.palette.setColor(QPalette.Base, QColor(25, 25, 25))
         self.palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-        self.palette.setColor(QPalette.ToolTipBase, Qt.white)
-        self.palette.setColor(QPalette.ToolTipText, Qt.white)
-        self.palette.setColor(QPalette.Text, Qt.white)
+        self.palette.setColor(QPalette.ToolTipBase, QColor(self.light_gray))
+        self.palette.setColor(QPalette.ToolTipText, QColor(self.light_gray))
+        self.palette.setColor(QPalette.Text, QColor(self.light_gray))
         self.palette.setColor(QPalette.Button, QColor(53, 53, 53))
         self.palette.setColor(QPalette.ButtonText, QColor(255, 153, 85)) #Qt.white
         self.palette.setColor(QPalette.BrightText, Qt.red)

@@ -3,17 +3,20 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import random, sys, os, math, time, numpy
 
-from lib import Utils, PaintUtils, Game, WelcomeScreen, Canvas, Tank, Shell
+from lib import Utils, PaintUtils, Game, MainMenu, Canvas, Tank, Shell
 
 class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
 
-    def __init__(self,logger,screen,fps=60.0):
+    def __init__(self,logger,debug_mode,screen,fps):
         super().__init__()
         self.fps = fps
+        self.physics_step_time = 1.0/60.0
         self.logger = logger
-        self.fps_actual = 0.0
+        self.fps_actual = -1.0
+        self.fps_max = -1.0
         self.is_paused = False
         self.prev_loop_tic = None
+        self.debug_mode = debug_mode
 
         self.screen_height = screen.size().height()
         self.screen_width = screen.size().width()
@@ -31,10 +34,12 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.setGeometry(self.welcome_offset_x, self.welcome_offset_y, self.welcome_width, self.welcome_height) 
 
         # Set main widget as main windows central widget
-        self.welcome_widget = WelcomeScreen.WelcomeScreen(logger)
-        self.welcome_widget.start_game_button.clicked.connect(self.start_game)
+        self.main_menu = MainMenu.MainMenu(logger)
+        self.main_menu.start_game_button.clicked.connect(self.start_game)
+        if self.debug_mode:
+            self.main_menu.debug_mode_checkbox.setChecked(True)
 
-        self.canvas = Canvas.Canvas(logger,self.screen_width,self.screen_height)
+        self.canvas = Canvas.Canvas(logger,self.debug_mode,self.screen_width,self.screen_height)
         self.canvas.pause_menu.quit_signal.connect(self.quit_game)
         self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
 
@@ -42,7 +47,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.game_timer.timeout.connect(self.game_loop)
 
         # Show main window
-        self.setCentralWidget(self.welcome_widget)
+        self.setCentralWidget(self.main_menu)
         self.show()
 
     def start_game(self):
@@ -54,9 +59,12 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.canvas.setFocus(True)
         self.showMaximized()
 
-        self.canvas.load_map(self.welcome_widget.map_files_combobox.currentText())
-        self.canvas.tanks = [Tank.Tank(self.logger,'m1_abrams.tank','Tank1')]
-        self.canvas.shells = [Shell.Shell(self.logger,'simple.shell','simple1',numpy.array([[200.],[700.]]))]
+        self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
+        self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','Tank1')]
+
+        self.debug_mode = self.debug_mode or self.main_menu.debug_mode_checkbox.isChecked()
+        if self.debug_mode:
+            self.logger.log(f'Starting game in debug mode! Use the "n" key to step through frames')
 
         self.prev_loop_tic = time.time()
         self.game_timer.start(1000/self.fps)
@@ -70,26 +78,38 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         if self.is_paused:
             self.logger.log('Resuming game...')
             self.is_paused = False
-            self.canvas.setEnabled(True)
+            if not self.debug_mode:
+                self.canvas.setEnabled(True)
         else:
             self.logger.log('Pausing game...')
             self.is_paused = True
-            self.canvas.setEnabled(False)
+            if not self.debug_mode:
+                self.canvas.setEnabled(False)
 
     def game_loop(self):
+        # Capture loop start time
         tic = time.time()
-        delta_t = tic - self.prev_loop_tic
-
-        if not self.is_paused:
-            self.loop_count += 1
-            self.canvas.set_pixmap()
-            self.canvas.update_physics(delta_t)
-            self.canvas.update_canvas(self.fps_actual)
-        toc = time.time()
+        loop_time = tic - self.prev_loop_tic
+        physics_loops = int(loop_time/self.physics_step_time)
         
+        # Compute game step
+        if not self.is_paused :
+            self.canvas.set_pixmap()
+            self.canvas.update_physics(loop_time)
+            self.canvas.update_canvas(self.fps_actual,self.fps_max)
+        toc = time.time()
+
+        # Try to compute the actual fps and max fps. Expect it might try to divide by zero
         try:
             self.fps_actual = 1.0/(tic-self.prev_loop_tic)
+            self.fps_max = 1.0/(toc-tic)
         except ZeroDivisionError:
             pass
 
+        # If you're in debug mode, pause at the end of every step
+        if self.debug_mode:
+            self.is_paused = True
+
+        # Set loop variables
+        self.loop_count += 1
         self.prev_loop_tic = tic

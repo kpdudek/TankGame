@@ -25,7 +25,9 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.visual_geometry = QtGui.QPolygonF()
         self.update_visual_geometry()
 
-        self.physics = Physics.Physics2D(10,100.0)
+        self.mass = float(shell_data['mass'])
+        self.max_vel = float(shell_data['max_vel'])
+        self.physics = Physics.Physics2D(self.mass,self.max_vel)
         self.physics.position = self.collision_geometry.sphere.pose
 
     def update_visual_geometry(self):
@@ -39,19 +41,20 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.shell_painter(painter)
         painter.drawPolygon(self.visual_geometry)
 
-    def update_position(self,collision_bodies):
+    def update_position(self,forces,delta_t,collision_bodies):
         old_pose = self.physics.position.copy()
         old_vertices = self.collision_geometry.vertices.copy()
 
-        self.physics.position += self.physics.velocity
-        self.collision_geometry.translate(self.physics.velocity)
+        # self.physics.position += self.physics.velocity
+        offset = self.physics.accelerate(forces,delta_t)
+        self.collision_geometry.translate(offset)
 
         # collision_geometry is of type Polygon
         self.collided_with = []
         for body in collision_bodies:
             if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry) or Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry):
                 self.physics.position = old_pose
-                self.collision_geometry.translate(-1*self.physics.velocity)
+                self.collision_geometry.translate(-1*offset)
                 self.physics.velocity = numpy.zeros([2,1])
                 self.collided_with.append(body.collision_geometry.game_id)
         

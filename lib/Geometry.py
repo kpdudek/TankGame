@@ -17,6 +17,14 @@ def px_to_m(pixels):
     scale = 7.94 / 50.0 # 7.94m / 50px
     return pixels * scale
 
+def m_to_px(meters):
+    '''
+    Converts pixels to meters using the M1 Abrams as a reference
+    '''
+    scale = 50.0 / 7.94 # 50px / 7.94m
+    return meters * scale
+
+
 def rotate_2d(vertices,angle):
     pass
 

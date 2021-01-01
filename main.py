@@ -16,8 +16,12 @@ def main(logger):
     app.setStyle("fusion")
     app.setPalette(palette)
 
+    if '-d' in sys.argv:
+        debug_mode = True
+    else:
+        debug_mode = False
     # Create the instance of our Window 
-    game_window = Game.Game(logger,app.primaryScreen(),fps) 
+    game_window = Game.Game(logger,debug_mode,app.primaryScreen(),fps) 
 
     # Start the app 
     sys.exit(app.exec()) 

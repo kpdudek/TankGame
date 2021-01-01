@@ -26,18 +26,19 @@ class Physics2D(QtWidgets.QWidget,Utils.FilePaths):
         self.touching_ground = False
 
     def accelerate(self,force,time):
-        # t = time.time()
         self.force = force
         self.compute_drag()
 
-        self.acceleration = force * time
-        self.velocity += self.acceleration
-
+        self.acceleration = force / self.mass
+        self.velocity += self.acceleration * time
         for count,vel in enumerate(self.velocity):
             if abs(vel) > self.max_vel:
                 self.velocity[count] = numpy.sign(vel) * self.max_vel
+        
+        offset = self.velocity * time
+        self.position += offset
 
-        # self.prev_time = t
+        return offset
 
     def compute_drag(self):
         # if self.velocity[0] 

@@ -32,13 +32,20 @@ class PauseMenu(QtWidgets.QWidget,Utils.FilePaths):
 
         # Qt Signal Connections
         self.quit_button.clicked.connect(self.quit_game)
+        self.resume_button.clicked.connect(self.resume_game)
 
     def quit_game(self):
         self.quit_signal.emit()
 
+    def showEvent(self,event):
+        self.setGeometry(QtCore.QRect(self.offset_x,self.offset_y,self.width,self.height))
+
     def closeEvent(self, event):
         self.pause_signal.emit()
         event.accept()
+
+    def resume_game(self):
+        self.close()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:

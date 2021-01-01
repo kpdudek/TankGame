@@ -27,6 +27,8 @@ Launch the game by navigating to the Tank Game folder in a terminal and then exe
 user@computer:~/path/to/PyQtGame$ python3 main.py
 ```
 
+You can launch the game in debug mode by passing `-d` as an argument.
+
 ## Developing
 If you're developing, install PyQt tools to get Qt Designer for editing the UI files.
 ```

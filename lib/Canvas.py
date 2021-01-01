@@ -7,12 +7,13 @@ from lib import Utils, PaintUtils, Geometry, PauseMenu, Map
 
 class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
 
-    def __init__(self,logger,screen_width,screen_height):
+    def __init__(self,logger,debug_mode,screen_width,screen_height):
         super().__init__()
         uic.loadUi(f'{self.user_path}ui/canvas.ui',self)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
         self.logger = logger
+        self.debug_mode = debug_mode
         self.screen_width = screen_width
         self.screen_height = screen_height
 
@@ -68,6 +69,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         if event.key() == QtCore.Qt.Key_Escape:
             self.pause_menu.pause_signal.emit()
             self.pause_menu.show()
+
+        if event.key() == QtCore.Qt.Key_N:
+            self.pause_menu.pause_signal.emit()
     
     def keyReleaseEvent(self, event):
         if not event.isAutoRepeat():
@@ -91,6 +95,12 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                 self.barrel_direction += 1.0
             elif key == QtCore.Qt.Key_S:
                 self.barrel_direction += -1.0
+            
+            elif key == QtCore.Qt.Key_F:
+                shell = self.tanks[self.selected_tank_idx].fire_shell()
+                if shell:
+                    self.shells.append(shell)
+                    self.logger.log(f'Tank {self.tanks[self.selected_tank_idx].name} fired a {shell.name}')
 
     def set_pixmap(self):
         width = self.frameGeometry().width()
@@ -107,20 +117,19 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
         ### Update tanks movement
         for idx,tank in enumerate(self.tanks):
+            tank.collision_geometry.set_bounding_sphere()
             if 'ground' in tank.collided_with:
-                forces = numpy.array([[0.],[-3.]])
-                # self.logger.log('Not adding gravity')
+                forces = numpy.array([[0.],[-9.8]])
             else:
-                forces = numpy.array([[0.],[3.]])
+                forces = numpy.array([[0.],[588000]])
             
             if idx == self.selected_tank_idx:
                 if self.drive_direction:
-                    forces[0] += self.drive_direction * 5
+                    forces[0] += self.drive_direction * 9.8
                 if self.barrel_direction:
-                    forces[1] += self.barrel_direction * 5
+                    forces[1] += self.barrel_direction * 50
             
-            tank.physics.accelerate(forces,delta_t)
-            tank.update_position([self.map])
+            tank.update_position(forces,delta_t,[self.map])
         
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
@@ -128,16 +137,15 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         ### Update shells movement
         for idx,shell in enumerate(self.shells):
             if not shell.launched:
-                forces = numpy.array([[800.],[-500.]])
+                forces = numpy.array([[80000.],[-500.]])
                 shell.launched = True
             else:
-                forces = numpy.array([[0.],[8.]])
+                forces = numpy.array([[0.],[49]])
             
-            shell.physics.accelerate(forces,delta_t)
-            shell.update_position([self.map])
+            shell.update_position(forces,delta_t,[self.map])
 
-    def update_canvas(self,fps):
-        self.fps_label = 'FPS: %.0f'%(fps)
+    def update_canvas(self,fps_actual,fps_max):
+        self.fps_label = "Current FPS: %.0f\nMax FPS: %.0f"%(fps_actual,fps_max)
 
         self.painter = QtGui.QPainter(self.canvas.pixmap())
 
@@ -152,7 +160,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for shell in self.shells:
             shell.draw_shell(self.painter)
 
-        self.painter.drawText(3,13,self.fps_label)
+        # if self.debug_mode:
+        self.text_painter(self.painter)
+        self.painter.drawText(3,13,200,75,QtCore.Qt.TextWordWrap,self.fps_label)
 
         self.painter.end()
         self.repaint()
