@@ -49,7 +49,7 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         # collision_geometry is of type Polygon
         self.collided_with = []
         for body in collision_bodies:
-            if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry):
+            if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry) or Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry):
                 self.physics.position = old_pose
                 self.collision_geometry.translate(-1*self.physics.velocity)
                 self.physics.velocity = numpy.zeros([2,1])

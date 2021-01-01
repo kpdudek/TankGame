@@ -41,8 +41,5 @@ class PauseMenu(QtWidgets.QWidget,Utils.FilePaths):
         event.accept()
 
     def keyPressEvent(self, event):
-        self.logger.log(f'Key Pressed: {event.key()}')
-
         if event.key() == QtCore.Qt.Key_Escape:
-            self.pause_signal.emit()
             self.close()

@@ -13,7 +13,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.logger = logger
         self.fps_actual = 0.0
         self.is_paused = False
-        self.prev_loop_tic = time.time()
+        self.prev_loop_tic = None
 
         self.screen_height = screen.size().height()
         self.screen_width = screen.size().width()
@@ -56,8 +56,9 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
 
         self.canvas.load_map(self.welcome_widget.map_files_combobox.currentText())
         self.canvas.tanks = [Tank.Tank(self.logger,'m1_abrams.tank','Tank1')]
-        self.canvas.shells = [Shell.Shell(self.logger,'simple.shell','simple1',numpy.array([[200.],[600.]]))]
+        self.canvas.shells = [Shell.Shell(self.logger,'simple.shell','simple1',numpy.array([[200.],[700.]]))]
 
+        self.prev_loop_tic = time.time()
         self.game_timer.start(1000/self.fps)
 
     def quit_game(self):
@@ -87,7 +88,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         toc = time.time()
         
         try:
-            self.fps_actual = 1.0/(toc-tic)
+            self.fps_actual = 1.0/(tic-self.prev_loop_tic)
         except ZeroDivisionError:
             pass
 

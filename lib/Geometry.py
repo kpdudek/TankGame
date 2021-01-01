@@ -140,6 +140,13 @@ def point_is_collision(poly,point):
 
     return True
 
+def poly_lies_inside(poly1,poly2):
+    r,c = poly1.vertices.shape
+    for idx in range(0,c):
+        if point_is_collision(poly2,poly1.vertices[:,idx]):
+            return True
+    return False
+
 def sphere_is_collision(poly1,poly2):
     '''
     This function determines if two spheres are in collision

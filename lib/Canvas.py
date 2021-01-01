@@ -128,16 +128,16 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         ### Update shells movement
         for idx,shell in enumerate(self.shells):
             if not shell.launched:
-                forces = numpy.array([[5.],[-3.]])
+                forces = numpy.array([[800.],[-500.]])
                 shell.launched = True
             else:
-                forces = numpy.array([[0.],[3.]])
+                forces = numpy.array([[0.],[8.]])
             
             shell.physics.accelerate(forces,delta_t)
             shell.update_position([self.map])
 
     def update_canvas(self,fps):
-        self.fps = fps
+        self.fps_label = 'FPS: %.0f'%(fps)
 
         self.painter = QtGui.QPainter(self.canvas.pixmap())
 
@@ -152,7 +152,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for shell in self.shells:
             shell.draw_shell(self.painter)
 
-        self.painter.drawText(3,13,'FPS: %.0f'%(fps))
+        self.painter.drawText(3,13,self.fps_label)
 
         self.painter.end()
         self.repaint()
