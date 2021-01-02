@@ -31,7 +31,7 @@ class MapCreator(QtWidgets.QWidget):
         bottom_left = numpy.array([[0.0],[self.bottom_height]])
         vertices = numpy.hstack((vertices,bottom_right,bottom_left))
         
-        print(vertices)
+        # print(vertices)
         return vertices
 
 class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
