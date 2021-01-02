@@ -44,7 +44,7 @@ class MainMenu(QtWidgets.QWidget,Utils.FilePaths):
 
     def list_shells(self):
         shell_files = os.listdir(f'{self.shells_path}')
-        self.logger.log(f'Map files found: {shell_files}')
+        self.logger.log(f'Shell files found: {shell_files}')
 
         if len(shell_files) == 0:
             self.shell_type_combobox.addItem('None')
@@ -53,7 +53,7 @@ class MainMenu(QtWidgets.QWidget,Utils.FilePaths):
 
     def list_tanks(self):
         tank_files = os.listdir(f'{self.tanks_path}')
-        self.logger.log(f'Map files found: {tank_files}')
+        self.logger.log(f'Tank files found: {tank_files}')
 
         if len(tank_files) == 0:
             self.tank_type_combobox.addItem('None')

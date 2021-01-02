@@ -70,7 +70,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
         self.collided_with = []
         for body in collision_bodies:
-            # if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry):
             data = self.collision_geometry.vertices
             r1,c1 = self.collision_geometry.vertices.shape
             data = data.astype(numpy.double)

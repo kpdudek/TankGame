@@ -67,10 +67,7 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         offset = self.physics.accelerate(forces,delta_t)
         self.collision_geometry.translate(offset)
 
-        # self.collided_with = []
-        for body in collision_bodies:
-            # if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry) or Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry):
-            
+        for body in collision_bodies:            
             data = self.collision_geometry.vertices
             r1,c1 = self.collision_geometry.vertices.shape
             data = data.astype(numpy.double)
