@@ -29,7 +29,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
         self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_tank_data(tank_data)
-        self.collision_geometry.translate(numpy.array([[100.],[700]]))
+        self.collision_geometry.translate(numpy.array([[100.],[50]]))
 
         self.visual_geometry = QtGui.QPolygonF()
         self.update_visual_geometry()

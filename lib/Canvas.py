@@ -82,8 +82,14 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     # Class Methods
     ##################################################################################
     def load_map(self,map_file):
-        self.logger.log(f'Loading map: {map_file}')
-        self.map = Map.Map(self.logger,map_file,self.screen_width,self.screen_height)
+        self.map = Map.Map(self.logger,self.debug_mode,self.screen_width,self.screen_height)
+
+        if map_file == 'Generate Random':
+            self.logger.log(f'Generating random map...')
+            self.map.random()
+        else:
+            self.logger.log(f'Loading map: {map_file}')
+            self.map.read_from_file(map_file)
 
     def process_key_presses(self):
         for key in self.keys_pressed:

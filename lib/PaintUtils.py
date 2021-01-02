@@ -36,7 +36,8 @@ class PaintBrushes():
     
     def point_painter(self,painter,color):
         pen = QtGui.QPen()
-        pen.setWidth(3)
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setWidth(6)
         pen.setColor(QColor(color))
 
         brush = QtGui.QBrush()

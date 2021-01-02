@@ -219,6 +219,10 @@ class Polygon(object):
         self.vertices = None
         self.sphere = None
 
+    def custom(self,vertices):
+        self.vertices = vertices
+        self.set_bounding_sphere()
+
     def from_map_data(self,map_data):
         vertices = np.zeros([2,len(map_data['vertices'])])
         for idx,vertex in enumerate(map_data['vertices']):

@@ -41,10 +41,6 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         if self.debug_mode:
             self.main_menu.debug_mode_checkbox.setChecked(True)
 
-        self.canvas = Canvas.Canvas(logger,self.debug_mode,self.screen_width,self.screen_height)
-        self.canvas.pause_menu.quit_signal.connect(self.quit_game)
-        self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
-
         self.game_timer = QtCore.QTimer()
         self.game_timer.timeout.connect(self.game_loop)
 
@@ -56,15 +52,18 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.logger.log('Creating game!')
         self.setWindowTitle('Tank Game : Running')
 
+        self.debug_mode = self.debug_mode or self.main_menu.debug_mode_checkbox.isChecked()
+
+        self.canvas = Canvas.Canvas(self.logger,self.debug_mode,self.screen_width,self.screen_height)
+        self.canvas.pause_menu.quit_signal.connect(self.quit_game)
+        self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
+        self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
+        self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','1')]
+
         self.setCentralWidget(self.canvas)
         self.setFocus(False)
         self.canvas.setFocus(True)
         self.showMaximized()
-
-        self.debug_mode = self.debug_mode or self.main_menu.debug_mode_checkbox.isChecked()
-
-        self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
-        self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','1')]
 
         if self.debug_mode:
             self.logger.log(f'Starting game in debug mode! Use the "n" key to step through frames')
