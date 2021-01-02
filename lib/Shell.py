@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json
+import random, sys, os, math, time, numpy, json, ctypes
 
 from lib import Utils, PaintUtils, Geometry, Physics
 
 class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
 
-    def __init__(self,logger, debug_mode, shell_file, name,starting_pose):
+    def __init__(self,logger, debug_mode, parent, shell_file, name,starting_pose):
         super().__init__()
         self.logger = logger
         self.debug_mode = debug_mode
+        self.parent = parent
         self.shell_file = shell_file
         self.collided_with = []
         self.launched = False
@@ -34,6 +35,11 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
 
         self.physics = Physics.Physics2D(self.mass,self.max_vel)
         self.physics.position = self.collision_geometry.sphere.pose.copy()
+
+        # C library for collision checking
+        self.c_double_p = ctypes.POINTER(ctypes.c_double)
+        self.cc_fun = ctypes.CDLL(f'{self.lib_path}{self.cc_lib_path}') # Or full path to file
+        self.cc_fun.polygon_is_collision.argtypes = [self.c_double_p,ctypes.c_int,ctypes.c_int,self.c_double_p,ctypes.c_int,ctypes.c_int] 
 
     def update_visual_geometry(self):
         self.visual_geometry = QtGui.QPolygonF()
@@ -61,12 +67,28 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         offset = self.physics.accelerate(forces,delta_t)
         self.collision_geometry.translate(offset)
 
-        self.collided_with = []
+        # self.collided_with = []
         for body in collision_bodies:
-            if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry) or Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry):
-                self.physics.position = old_pose
-                self.collision_geometry.translate(-1*offset)
-                self.physics.velocity = numpy.zeros([2,1])
-                self.collided_with.append(body.name)
+            # if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry) or Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry):
+            
+            data = self.collision_geometry.vertices
+            r1,c1 = self.collision_geometry.vertices.shape
+            data = data.astype(numpy.double)
+            data_p = data.ctypes.data_as(self.c_double_p)
+
+            data2 = body.collision_geometry.vertices
+            r2,c2 = body.collision_geometry.vertices.shape
+            data2 = data2.astype(numpy.double)
+            data_p2 = data2.ctypes.data_as(self.c_double_p)
+
+            # # C Function call in python
+            if Geometry.sphere_is_collision(self.collision_geometry,body.collision_geometry):
+                res = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
+                if res or Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry):
+                    self.physics.position = old_pose
+                    self.collision_geometry.translate(-1*offset)
+                    self.physics.velocity = numpy.zeros([2,1])
+                    self.collided_with.append(body.name)
+                    self.logger.log(f'Shell fired by [{self.parent}] hit {self.collided_with}')
         
         self.update_visual_geometry()

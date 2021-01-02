@@ -100,7 +100,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                 shell = self.tanks[self.selected_tank_idx].fire_shell()
                 if shell:
                     self.shells.append(shell)
-                    self.logger.log(f'Tank ({self.tanks[self.selected_tank_idx].name}) fired a ({shell.name})')
+                    self.logger.log(f'Tank [{self.tanks[self.selected_tank_idx].name}] fired a [{shell.name}]')
 
     def set_pixmap(self):
         width = self.frameGeometry().width()
@@ -129,12 +129,13 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
         # Update shells movement
         for idx,shell in enumerate(self.shells):
-            if not shell.launched:
-                forces = shell.launch_force.copy()
-                shell.launched = True
-            else:
-                forces = shell.gravity_force.copy()
-            shell.update_position(forces,delta_t,[self.map])
+            if not shell.collided_with:
+                if not shell.launched:
+                    forces = shell.launch_force.copy()
+                    shell.launched = True
+                else:
+                    forces = shell.gravity_force.copy()
+                shell.update_position(forces,delta_t,[self.map])
 
     def update_canvas(self,fps_actual,fps_max):
         self.fps_label = "Current FPS: %.0f\nMax FPS: %.0f"%(fps_actual,fps_max)

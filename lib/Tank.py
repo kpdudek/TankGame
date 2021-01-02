@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json
+import random, sys, os, math, time, numpy, json, ctypes
 
 from lib import Utils, PaintUtils, Geometry, Physics, Shell
 
@@ -29,13 +29,18 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
         self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_tank_data(tank_data)
-        self.collision_geometry.translate(numpy.array([[100.],[500]]))
+        self.collision_geometry.translate(numpy.array([[100.],[700]]))
 
         self.visual_geometry = QtGui.QPolygonF()
         self.update_visual_geometry()
 
         self.physics = Physics.Physics2D(self.mass,self.max_vel)
         self.physics.position = self.collision_geometry.sphere.pose.copy()
+
+        # C library for collision checking
+        self.c_double_p = ctypes.POINTER(ctypes.c_double)
+        self.cc_fun = ctypes.CDLL(f'{self.lib_path}{self.cc_lib_path}') # Or full path to file
+        self.cc_fun.polygon_is_collision.argtypes = [self.c_double_p,ctypes.c_int,ctypes.c_int,self.c_double_p,ctypes.c_int,ctypes.c_int] 
 
     def update_visual_geometry(self):
         self.visual_geometry = QtGui.QPolygonF()
@@ -65,11 +70,25 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
         self.collided_with = []
         for body in collision_bodies:
-            if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry):
-                self.physics.position = old_pose
-                self.collision_geometry.translate(-1*offset)
-                self.physics.velocity = numpy.zeros([2,1])
-                self.collided_with.append(body.name)
+            # if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry):
+            data = self.collision_geometry.vertices
+            r1,c1 = self.collision_geometry.vertices.shape
+            data = data.astype(numpy.double)
+            data_p = data.ctypes.data_as(self.c_double_p)
+
+            data2 = body.collision_geometry.vertices
+            r2,c2 = body.collision_geometry.vertices.shape
+            data2 = data2.astype(numpy.double)
+            data_p2 = data2.ctypes.data_as(self.c_double_p)
+
+            # C Function call in python
+            if Geometry.sphere_is_collision(self.collision_geometry,body.collision_geometry):
+                res = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
+                if res:
+                    self.physics.position = old_pose
+                    self.collision_geometry.translate(-1*offset)
+                    self.physics.velocity = numpy.zeros([2,1])
+                    self.collided_with.append(body.name)
         
         self.update_visual_geometry()
 
@@ -79,6 +98,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             starting_pose = self.collision_geometry.sphere.pose + numpy.array([[30],[-25]])
             self.prev_shot_time = t
             self.shots_fired += 1
-            return Shell.Shell(self.logger,self.debug_mode,'simple.shell',f'{self.shots_fired}',starting_pose)
+            return Shell.Shell(self.logger,self.debug_mode,self.name,'simple.shell',f'{self.shots_fired}',starting_pose)
         else:
             return None

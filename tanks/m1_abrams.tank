@@ -4,5 +4,5 @@
     "mass":60000,
     "drive_force":6000000,
     "max_vel":20,
-    "fire_rate":400
+    "fire_rate":800
 }
