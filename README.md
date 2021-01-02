@@ -6,7 +6,7 @@ To run the game you need python3, pip3, numpy, and PyQt5.
 #### Ubuntu 18.04
 ```
 sudo apt-get install git
-git clone https://github.com/kpdudek/PyQtGame.git
+git clone https://github.com/kpdudek/TankGame.git
 sudo apt-get install python3-pip
 pip3 install PyQt5 
 pip3 install numpy
@@ -16,7 +16,7 @@ pip3 install numpy
 Download python >3.7 from the Microsoft Store and then use pip3 to install PyQt5 and numpy from PowerShell.
 Install git as described [here](https://www.computerhope.com/issues/ch001927.htm#:~:text=How%20to%20install%20and%20use%20Git%20on%20Windows,or%20fetching%20updates%20from%20the%20remote%20repository.%20)
 ```
-git clone https://github.com/kpdudek/PyQtGame.git
+git clone https://github.com/kpdudek/TankGame.git
 pip3 install PyQt5 
 pip3 install numpy
 ```
@@ -24,7 +24,7 @@ pip3 install numpy
 ## Playing the Game
 Launch the game by navigating to the Tank Game folder in a terminal and then executing `main.py`
 ```
-user@computer:~/path/to/PyQtGame$ python3 main.py
+user@computer:~/path/to/TankGame$ python3 main.py
 ```
 
 You can launch the game in debug mode by passing `-d` as an argument.
