@@ -12,8 +12,9 @@ class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBr
 
         fp = open(f'{self.maps_path}{map_file}','r')
         map_data = json.load(fp)
-
-        self.collision_geometry = Geometry.Polygon('ground')
+        self.name = map_data['name']
+        
+        self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_map_data(map_data)
 
         self.visual_geometry = QtGui.QPolygonF()

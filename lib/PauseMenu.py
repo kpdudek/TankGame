@@ -13,7 +13,7 @@ class PauseMenu(QtWidgets.QWidget,Utils.FilePaths):
         super().__init__()
         uic.loadUi(f'{self.user_path}ui/pause_menu.ui',self)
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-        self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
+        # self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setWindowTitle('Pause Menu')
 

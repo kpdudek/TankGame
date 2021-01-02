@@ -49,7 +49,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for body in self.collision_bodies:
             selected_entity = Geometry.point_is_collision(body.collision_geometry,self.mouse_pose)
             if selected_entity:
-                self.logger.log(f'Mouse collided with: {body.collision_geometry.game_id}')
+                self.logger.log(f'Mouse collided with: {body.name}')
     
     def mouseMoveEvent(self,e):
         pass
@@ -115,33 +115,25 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     def update_physics(self,delta_t):
         self.process_key_presses()
 
-        ### Update tanks movement
+        # Update tanks movement
         for idx,tank in enumerate(self.tanks):
-            tank.collision_geometry.set_bounding_sphere()
-            if 'ground' in tank.collided_with:
-                forces = numpy.array([[0.],[-588000]])
-            else:
-                forces = numpy.array([[0.],[588000]])
-            
+            forces = tank.gravity_force.copy()
             if idx == self.selected_tank_idx:
                 if self.drive_direction:
-                    forces[0] += self.drive_direction * 588000
+                    forces[0] += self.drive_direction * tank.drive_force
                 if self.barrel_direction:
-                    forces[1] += self.barrel_direction * 588000*2
-            
+                    forces[1] += self.barrel_direction * tank.drive_force
             tank.update_position(forces,delta_t,[self.map])
-        
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
 
-        ### Update shells movement
+        # Update shells movement
         for idx,shell in enumerate(self.shells):
             if not shell.launched:
-                forces = numpy.array([[20000.],[-30000.]])
+                forces = shell.launch_force.copy()
                 shell.launched = True
             else:
-                forces = numpy.array([[0.],[490]])
-            
+                forces = shell.gravity_force.copy()
             shell.update_position(forces,delta_t,[self.map])
 
     def update_canvas(self,fps_actual,fps_max):
@@ -160,7 +152,6 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for shell in self.shells:
             shell.draw_shell(self.painter)
 
-        # if self.debug_mode:
         self.text_painter(self.painter)
         self.painter.drawText(3,13,200,75,QtCore.Qt.TextWordWrap,self.fps_label)
 

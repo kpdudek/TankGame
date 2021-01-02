@@ -18,22 +18,24 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
         fp = open(f'{self.tanks_path}{tank_file}','r')
         tank_data = json.load(fp)
+        self.logger.log(f'Creating tank with params: {tank_data}')
 
-        self.collision_geometry = Geometry.Polygon(name)
+        self.name = f"{tank_data['name']}_{name}"
+        self.mass = float(tank_data['mass'])
+        self.max_vel = Geometry.m_to_px(float(tank_data['max_vel']))
+        self.fire_rate = 1.0 / (float(tank_data['fire_rate']) / 60.) # seconds per round
+        self.gravity_force = numpy.array([[0],[self.mass * Geometry.m_to_px(9.8)]])
+        self.drive_force = float(tank_data['drive_force'])
+
+        self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_tank_data(tank_data)
         self.collision_geometry.translate(numpy.array([[100.],[500]]))
 
         self.visual_geometry = QtGui.QPolygonF()
         self.update_visual_geometry()
 
-        self.name = f"{tank_data['name']}_{name}"
-        self.mass = float(tank_data['mass'])
-        self.max_vel = Geometry.m_to_px(float(tank_data['max_vel']))
-        self.fire_rate = 1.0 / (float(tank_data['fire_rate']) / 60.) # seconds per round
-
-        self.logger.log(f'Created tank with params: Mass: {self.mass} Max Vel: {self.max_vel} Fire Rate: {self.fire_rate}')
         self.physics = Physics.Physics2D(self.mass,self.max_vel)
-        self.physics.position = self.collision_geometry.sphere.pose
+        self.physics.position = self.collision_geometry.sphere.pose.copy()
 
     def update_visual_geometry(self):
         self.visual_geometry = QtGui.QPolygonF()
@@ -57,20 +59,17 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
     def update_position(self,forces,delta_t,collision_bodies):
         old_pose = self.physics.position.copy()
-        old_vertices = self.collision_geometry.vertices.copy()
 
-        # self.physics.position += self.physics.velocity
         offset = self.physics.accelerate(forces,delta_t)
         self.collision_geometry.translate(offset)
 
-        # collision_geometry is of type Polygon
         self.collided_with = []
         for body in collision_bodies:
             if Geometry.polygon_is_collision(self.collision_geometry,body.collision_geometry):
                 self.physics.position = old_pose
                 self.collision_geometry.translate(-1*offset)
                 self.physics.velocity = numpy.zeros([2,1])
-                self.collided_with.append(body.collision_geometry.game_id)
+                self.collided_with.append(body.name)
         
         self.update_visual_geometry()
 
@@ -80,6 +79,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             starting_pose = self.collision_geometry.sphere.pose + numpy.array([[30],[-25]])
             self.prev_shot_time = t
             self.shots_fired += 1
-            return Shell.Shell(self.logger,'simple.shell',f'{self.shots_fired}',starting_pose)
+            return Shell.Shell(self.logger,self.debug_mode,'simple.shell',f'{self.shots_fired}',starting_pose)
         else:
             return None
