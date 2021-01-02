@@ -7,7 +7,7 @@ from lib import Utils, PaintUtils, Geometry, Physics
 
 class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
 
-    def __init__(self,logger, debug_mode, parent, shell_file, name,starting_pose):
+    def __init__(self,logger, debug_mode, parent, shell_file, name, starting_pose, launch_angle):
         super().__init__()
         self.logger = logger
         self.debug_mode = debug_mode
@@ -30,8 +30,8 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.mass = float(shell_data['mass'])
         self.max_vel = float(shell_data['max_vel'])
         self.gravity_force = numpy.array([[0],[self.mass * Geometry.m_to_px(9.8)]])
-        fx,fy = shell_data['launch_force']
-        self.launch_force = numpy.array([[float(fx)],[float(fy)]])
+        self.launch_force = float(shell_data['launch_force'])
+        self.launch_angle = launch_angle
 
         self.physics = Physics.Physics2D(self.mass,self.max_vel)
         self.physics.position = self.collision_geometry.sphere.pose.copy()

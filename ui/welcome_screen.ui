@@ -279,7 +279,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="2" column="0">
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="load_game_button">
         <property name="font">
          <font>
           <pointsize>12</pointsize>

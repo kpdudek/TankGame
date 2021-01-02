@@ -38,6 +38,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         # Set main widget as main windows central widget
         self.main_menu = MainMenu.MainMenu(logger)
         self.main_menu.start_game_button.clicked.connect(self.start_game)
+        self.main_menu.load_game_button.clicked.connect(self.load_game)
         if self.debug_mode:
             self.main_menu.debug_mode_checkbox.setChecked(True)
 
@@ -52,13 +53,13 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.logger.log('Creating game!')
         self.setWindowTitle('Tank Game : Running')
 
-        self.debug_mode = self.debug_mode or self.main_menu.debug_mode_checkbox.isChecked()
+        self.debug_mode = self.main_menu.debug_mode_checkbox.isChecked()
 
         self.canvas = Canvas.Canvas(self.logger,self.debug_mode,self.screen_width,self.screen_height)
         self.canvas.pause_menu.quit_signal.connect(self.quit_game)
         self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
+        self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','1'),Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','2')]
         self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
-        self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','1')]
 
         self.setCentralWidget(self.canvas)
         self.setFocus(False)
@@ -71,8 +72,17 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.prev_loop_tic = time.time()
         self.game_timer.start(1000/self.fps)
 
+    def save_game(self):
+        pass
+
+    def load_game(self):
+        save_game_file = self.main_menu.save_files_combobox.currentText()
+        self.logger.log(f'Loading game from save file: {save_game_file}')
+
     def quit_game(self):
         self.logger.log('Shutdown signal received...')
+        self.logger.log('Saving game...')
+        self.save_game()
         self.canvas.pause_menu.close()
         self.close()
 
@@ -95,7 +105,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         physics_loops = int(loop_time/self.physics_step_time)
         
         # Compute game step
-        if not self.is_paused :
+        if not self.is_paused:
             self.canvas.set_pixmap()
             self.canvas.update_physics(loop_time * self.time_scale)
             self.canvas.update_canvas(self.fps_actual,self.fps_max)

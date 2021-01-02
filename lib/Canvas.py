@@ -18,6 +18,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.screen_height = screen_height
 
         self.zoom = 0
+        self.camera_offset = numpy.array([[0.],[0.]])
         self.keys_pressed = []
         self.width = -1
         self.height = -1
@@ -82,7 +83,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     # Class Methods
     ##################################################################################
     def load_map(self,map_file):
-        self.map = Map.Map(self.logger,self.debug_mode,self.screen_width,self.screen_height)
+        self.map = Map.Map(self.logger,self.debug_mode)
 
         if map_file == 'Generate Random':
             self.logger.log(f'Generating random map...')
@@ -90,6 +91,11 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         else:
             self.logger.log(f'Loading map: {map_file}')
             self.map.read_from_file(map_file)
+        
+        delta = numpy.zeros([2,1])
+        for tank in self.tanks:
+            tank.teleport(self.map.seed_pose + delta)
+            delta[0] += 200
 
     def process_key_presses(self):
         for key in self.keys_pressed:
@@ -101,6 +107,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                 self.barrel_direction += 1.0
             elif key == QtCore.Qt.Key_S:
                 self.barrel_direction += -1.0
+            elif key == QtCore.Qt.Key_Up:
+                self.tanks[self.selected_tank_idx].barrel_angle += -0.03
+            elif key == QtCore.Qt.Key_Down:
+                self.tanks[self.selected_tank_idx].barrel_angle += 0.03
             
             elif key == QtCore.Qt.Key_F:
                 shell = self.tanks[self.selected_tank_idx].fire_shell()
@@ -137,7 +147,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for idx,shell in enumerate(self.shells):
             if not shell.collided_with:
                 if not shell.launched:
-                    forces = shell.launch_force.copy()
+                    x = shell.launch_force*math.cos(shell.launch_angle)
+                    y = shell.launch_force*math.sin(shell.launch_angle)
+                    forces = numpy.array([[x],[y]])
                     shell.launched = True
                 else:
                     forces = shell.gravity_force.copy()

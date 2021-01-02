@@ -11,18 +11,17 @@ class MapCreator(QtWidgets.QWidget):
         self.logger = logger
         self.debug_mode = debug_mode
 
-        self.scale = 800.
+        self.scale = 600.
     
     def random_map(self):
         self.length = 3000.
-        self.bottom_height = 50
+        self.bottom_height = 500
 
         num_vertices = random.randint(10,20)
         self.logger.log(f'Generating random map with {num_vertices} top vertices...')
         grid = Noise.perlin_noise(num_vertices)
-        idx = random.randint(0,num_vertices)
+        idx = random.randint(0,num_vertices-1)
 
-        # top_surface = numpy.average(grid,axis=0) * self.scale * -1.
         top_surface = grid[idx,:] * self.scale * -1.
         x_spacing = numpy.linspace(0,self.length,num=num_vertices)
         vertices = numpy.vstack((x_spacing,top_surface))
@@ -31,19 +30,22 @@ class MapCreator(QtWidgets.QWidget):
         bottom_left = numpy.array([[0.0],[self.bottom_height]])
         vertices = numpy.hstack((vertices,bottom_right,bottom_left))
         
-        # print(vertices)
         return vertices
 
 class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
 
-    def __init__(self,logger,debug_mode,screen_width,screen_height):
+    def __init__(self,logger,debug_mode):
         super().__init__()
         self.logger = logger
         self.debug_mode = debug_mode
-        self.screen_width = screen_width
-        self.screen_height = screen_height
-
         self.map_creator = MapCreator(self.logger,self.debug_mode)
+
+    def set_visual_geometry(self):
+        r,c = self.collision_geometry.vertices.shape
+        self.visual_geometry = QtGui.QPolygonF()
+        for idx in range(0,c):
+            point = QtCore.QPointF(self.collision_geometry.vertices[0,idx],self.collision_geometry.vertices[1,idx])
+            self.visual_geometry.append(point)
 
     def read_from_file(self,map_file):
         fp = open(f'{self.maps_path}{map_file}','r')
@@ -52,14 +54,13 @@ class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBr
         
         self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_map_data(map_data)
-        offset = numpy.array([[0.],[self.screen_height]])
+        ox,oy = map_data['offset']
+        offset = numpy.array([[ox],[oy]])
+        tx,ty = map_data['seed_pose']
+        self.seed_pose = numpy.array([[tx],[ty]])
+        
         self.collision_geometry.translate(offset)
-
-        r,c = self.collision_geometry.vertices.shape
-        self.visual_geometry = QtGui.QPolygonF()
-        for idx in range(0,c):
-            point = QtCore.QPointF(self.collision_geometry.vertices[0,idx],self.collision_geometry.vertices[1,idx])
-            self.visual_geometry.append(point)
+        self.set_visual_geometry()
 
     def random(self):
         self.name ='ground'
@@ -68,14 +69,12 @@ class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBr
         self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.custom(vertices)
 
-        offset = numpy.array([[0.],[self.screen_height]])
+        self.seed_pose = numpy.array([[100.],[300.]])
+
+        offset = numpy.array([[0.],[800]])
         self.collision_geometry.translate(offset)
 
-        r,c = self.collision_geometry.vertices.shape
-        self.visual_geometry = QtGui.QPolygonF()
-        for idx in range(0,c):
-            point = QtCore.QPointF(self.collision_geometry.vertices[0,idx],self.collision_geometry.vertices[1,idx])
-            self.visual_geometry.append(point)
+        self.set_visual_geometry()
 
     def draw_map(self,painter):
         self.map_painter(painter)

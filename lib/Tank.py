@@ -37,6 +37,8 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.physics = Physics.Physics2D(self.mass,self.max_vel)
         self.physics.position = self.collision_geometry.sphere.pose.copy()
 
+        self.barrel_angle = -.785
+
         # C library for collision checking
         self.c_double_p = ctypes.POINTER(ctypes.c_double)
         self.cc_fun = ctypes.CDLL(f'{self.lib_path}{self.cc_lib_path}') # Or full path to file
@@ -61,6 +63,11 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             painter.drawEllipse(x-r, y-r, r*2, r*2)
             self.point_painter(painter,self.red)
             painter.drawPoint(x,y)
+
+    def teleport(self,pose):
+        self.collision_geometry.teleport(pose)
+        self.physics.position = self.collision_geometry.sphere.pose.copy()
+        self.physics.velocity = numpy.zeros([2,1])
 
     def update_position(self,forces,delta_t,collision_bodies):
         old_pose = self.physics.position.copy()
@@ -97,6 +104,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             starting_pose = self.collision_geometry.sphere.pose + numpy.array([[30],[-25]])
             self.prev_shot_time = t
             self.shots_fired += 1
-            return Shell.Shell(self.logger,self.debug_mode,self.name,'simple.shell',f'{self.shots_fired}',starting_pose)
+            return Shell.Shell(self.logger,self.debug_mode,self.name,'simple.shell',f'{self.shots_fired}',starting_pose,self.barrel_angle)
         else:
             return None
