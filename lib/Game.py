@@ -18,6 +18,8 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.prev_loop_tic = None
         self.debug_mode = debug_mode
 
+        self.time_scale = 1.0
+
         self.screen_height = screen.size().height()
         self.screen_width = screen.size().width()
 
@@ -59,10 +61,11 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.canvas.setFocus(True)
         self.showMaximized()
 
-        self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
-        self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','Tank1')]
-
         self.debug_mode = self.debug_mode or self.main_menu.debug_mode_checkbox.isChecked()
+
+        self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
+        self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','1')]
+
         if self.debug_mode:
             self.logger.log(f'Starting game in debug mode! Use the "n" key to step through frames')
 
@@ -95,7 +98,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         # Compute game step
         if not self.is_paused :
             self.canvas.set_pixmap()
-            self.canvas.update_physics(loop_time)
+            self.canvas.update_physics(loop_time * self.time_scale)
             self.canvas.update_canvas(self.fps_actual,self.fps_max)
         toc = time.time()
 

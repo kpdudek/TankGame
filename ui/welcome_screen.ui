@@ -212,6 +212,11 @@
       </item>
       <item row="7" column="0" colspan="2">
        <widget class="QCheckBox" name="debug_mode_checkbox">
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
         <property name="text">
          <string>Debug Mode</string>
         </property>

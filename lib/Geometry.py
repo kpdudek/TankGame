@@ -245,19 +245,19 @@ class Polygon(object):
 
     def set_bounding_sphere(self):
         # Compute centroid    
-        r,c = self.vertices.shape[0:2]
+        r,c = self.vertices.shape
         x_c = np.sum(self.vertices[0,:]) / float(c)
         y_c = np.sum(self.vertices[1,:]) / float(c)
 
         # Compute radius
-        r = 0.
+        rad = 0.
         centroid = np.array([[x_c],[y_c]])
         for idx in range(0,len(self.vertices[0,:])):
             vert = self.vertices[:,idx]
-            rad = np.sqrt(np.power(vert[0]-centroid[0],2)+np.power(vert[1]-centroid[1],2))
-            if rad > r:
-                r = rad 
-        self.sphere = Sphere(x_c,y_c,r)
+            ray = np.sqrt(np.power(vert[0]-centroid[0],2)+np.power(vert[1]-centroid[1],2))
+            if ray > rad:
+                rad = ray 
+        self.sphere = Sphere(x_c,y_c,rad)
 
     def translate(self,vec):
         self.vertices += vec

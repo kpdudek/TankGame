@@ -11,7 +11,6 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         super().__init__()
         self.logger = logger
         self.shell_file = shell_file
-        self.name = name
         self.collided_with = []
         self.launched = False
 
@@ -25,6 +24,7 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.visual_geometry = QtGui.QPolygonF()
         self.update_visual_geometry()
 
+        self.name = f"{shell_data['name']}_{name}"
         self.mass = float(shell_data['mass'])
         self.max_vel = float(shell_data['max_vel'])
         self.physics = Physics.Physics2D(self.mass,self.max_vel)

@@ -100,7 +100,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                 shell = self.tanks[self.selected_tank_idx].fire_shell()
                 if shell:
                     self.shells.append(shell)
-                    self.logger.log(f'Tank {self.tanks[self.selected_tank_idx].name} fired a {shell.name}')
+                    self.logger.log(f'Tank ({self.tanks[self.selected_tank_idx].name}) fired a ({shell.name})')
 
     def set_pixmap(self):
         width = self.frameGeometry().width()
@@ -119,15 +119,15 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for idx,tank in enumerate(self.tanks):
             tank.collision_geometry.set_bounding_sphere()
             if 'ground' in tank.collided_with:
-                forces = numpy.array([[0.],[-9.8]])
+                forces = numpy.array([[0.],[-588000]])
             else:
                 forces = numpy.array([[0.],[588000]])
             
             if idx == self.selected_tank_idx:
                 if self.drive_direction:
-                    forces[0] += self.drive_direction * 9.8
+                    forces[0] += self.drive_direction * 588000
                 if self.barrel_direction:
-                    forces[1] += self.barrel_direction * 50
+                    forces[1] += self.barrel_direction * 588000*2
             
             tank.update_position(forces,delta_t,[self.map])
         
@@ -137,10 +137,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         ### Update shells movement
         for idx,shell in enumerate(self.shells):
             if not shell.launched:
-                forces = numpy.array([[80000.],[-500.]])
+                forces = numpy.array([[20000.],[-30000.]])
                 shell.launched = True
             else:
-                forces = numpy.array([[0.],[49]])
+                forces = numpy.array([[0.],[490]])
             
             shell.update_position(forces,delta_t,[self.map])
 

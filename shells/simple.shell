@@ -1,1 +1,6 @@
-{"vertices":[[0,0],[10,0],[10,5],[0,5]],"mass":5,"max_vel":100}
+{
+    "name":"simple_shell",
+    "vertices":[[0,0],[10,0],[10,5],[0,5]],
+    "mass":5,
+    "max_vel":365
+}

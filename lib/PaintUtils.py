@@ -15,10 +15,36 @@ class Colors():
     gray = '#353535'
     light_gray = '#BDBDBD'
     black = '#000000'
+    red = '#FF0000'
+
 
 class PaintBrushes():
     def __init__(self):
         super().__init__()
+
+    def text_painter(self,painter):
+        pen = QtGui.QPen()
+        pen.setWidth(0)
+        pen.setColor(QColor(self.black))
+
+        brush = QtGui.QBrush()
+        brush.setColor(QColor(self.black))
+        brush.setStyle(Qt.SolidPattern)
+
+        painter.setPen(pen)
+        painter.setBrush(brush)
+    
+    def point_painter(self,painter,color):
+        pen = QtGui.QPen()
+        pen.setWidth(3)
+        pen.setColor(QColor(color))
+
+        brush = QtGui.QBrush()
+        brush.setColor(QColor(color))
+        brush.setStyle(Qt.SolidPattern)
+
+        painter.setPen(pen)
+        painter.setBrush(brush)
 
     def background_painter(self,painter):
         pen = QtGui.QPen()
@@ -75,18 +101,6 @@ class PaintBrushes():
 
         brush = QtGui.QBrush()
         brush.setColor(QColor(self.brown))
-        brush.setStyle(Qt.SolidPattern)
-
-        painter.setPen(pen)
-        painter.setBrush(brush)
-
-    def text_painter(self,painter):
-        pen = QtGui.QPen()
-        pen.setWidth(0)
-        pen.setColor(QColor(self.black))
-
-        brush = QtGui.QBrush()
-        brush.setColor(QColor(self.black))
         brush.setStyle(Qt.SolidPattern)
 
         painter.setPen(pen)

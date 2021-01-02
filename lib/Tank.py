@@ -12,19 +12,21 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.logger = logger
         self.debug_mode = debug_mode
         self.tank_file = tank_file
-        self.name = name
         self.collided_with = []
         self.prev_shot_time = -1.0
+        self.shots_fired = 0
 
         fp = open(f'{self.tanks_path}{tank_file}','r')
         tank_data = json.load(fp)
 
         self.collision_geometry = Geometry.Polygon(name)
         self.collision_geometry.from_tank_data(tank_data)
+        self.collision_geometry.translate(numpy.array([[100.],[500]]))
 
         self.visual_geometry = QtGui.QPolygonF()
         self.update_visual_geometry()
 
+        self.name = f"{tank_data['name']}_{name}"
         self.mass = float(tank_data['mass'])
         self.max_vel = Geometry.m_to_px(float(tank_data['max_vel']))
         self.fire_rate = 1.0 / (float(tank_data['fire_rate']) / 60.) # seconds per round
@@ -47,9 +49,11 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         if self.debug_mode:
             x = int(self.collision_geometry.sphere.pose[0])
             y = int(self.collision_geometry.sphere.pose[1])
-            r = int(self.collision_geometry.sphere.radius) * 2
-            self.tank_debug_painter(painter,self.forest_green)
-            painter.drawEllipse(x, y, r, r)
+            r = int(self.collision_geometry.sphere.radius)
+            self.tank_debug_painter(painter,self.red)
+            painter.drawEllipse(x-r, y-r, r*2, r*2)
+            self.point_painter(painter,self.red)
+            painter.drawPoint(x,y)
 
     def update_position(self,forces,delta_t,collision_bodies):
         old_pose = self.physics.position.copy()
@@ -73,9 +77,9 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
     def fire_shell(self):
         t = time.time()
         if (t-self.prev_shot_time) > self.fire_rate:
-            starting_pose = self.collision_geometry.sphere.pose + numpy.array([[50],[-155]])
+            starting_pose = self.collision_geometry.sphere.pose + numpy.array([[30],[-25]])
             self.prev_shot_time = t
-            return Shell.Shell(self.logger,'simple.shell','simple1',starting_pose)
-
+            self.shots_fired += 1
+            return Shell.Shell(self.logger,'simple.shell',f'{self.shots_fired}',starting_pose)
         else:
             return None
