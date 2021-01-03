@@ -95,7 +95,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         delta = numpy.zeros([2,1])
         for tank in self.tanks:
             tank.teleport(self.map.seed_pose + delta)
-            delta[0] += 200
+            delta[0] += 400
 
     def process_key_presses(self):
         for key in self.keys_pressed:
@@ -117,13 +117,13 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             
             # up arrow - raise tank firing power
             elif key == QtCore.Qt.Key_Up:
-                self.tanks[self.selected_tank_idx].power_scale += 0.01
+                self.tanks[self.selected_tank_idx].power_scale += 0.005
                 if self.tanks[self.selected_tank_idx].power_scale > 1.0:
                     self.tanks[self.selected_tank_idx].power_scale = 1.0
             
             # down arrow - lower tank firing power
             elif key == QtCore.Qt.Key_Down:
-                self.tanks[self.selected_tank_idx].power_scale -= 0.01
+                self.tanks[self.selected_tank_idx].power_scale -= 0.005
                 if self.tanks[self.selected_tank_idx].power_scale < .1:
                     self.tanks[self.selected_tank_idx].power_scale = .1
             
@@ -168,7 +168,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.barrel_direction = 0.0
 
         # Update shells movement
-        for idx,shell in enumerate(self.shells):
+        idx_offset = 0
+        for idx in range(0,len(self.shells)):
+            shell = self.shells[idx+idx_offset]
             if not shell.collided_with:
                 if not shell.launched:
                     scale = self.tanks[self.selected_tank_idx].power_scale
@@ -178,7 +180,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                     shell.launched = True
                 else:
                     forces = shell.gravity_force.copy()
-                shell.update_position(forces,delta_t,[self.map])
+                shell.update_position(forces,delta_t,[self.map]+self.tanks)
+            else:
+                self.shells.pop(idx+idx_offset)
+                idx_offset -= 1
 
     def update_canvas(self,fps_actual,fps_max):
         self.fps_label = "Current FPS: %.0f\nMax FPS: %.0f"%(fps_actual,fps_max)

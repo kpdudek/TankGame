@@ -26,6 +26,8 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.fire_rate = 1.0 / (float(tank_data['fire_rate']) / 60.) # seconds per round
         self.gravity_force = numpy.array([[0],[self.mass * Geometry.m_to_px(9.8)]])
         self.drive_force = float(tank_data['drive_force'])
+        self.upper_barrel_limit = 0
+        self.lower_barrel_limit = -3.14
 
         self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_tank_data(tank_data,'vertices')
@@ -87,8 +89,11 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
     def rotate_barrel(self,sign):
         # self.logger.log('Rotating tank barrel...')
-        step_size = 0.05
-        self.barrel_angle += (sign * step_size)
+        step_size = 0.01
+        step_angle = self.barrel_angle + (sign * step_size)
+        if (step_angle > self.upper_barrel_limit) or (step_angle < self.lower_barrel_limit):
+            return
+        self.barrel_angle = step_angle
         self.barrel_geometry.rotate(sign,step_size)
 
         x = self.barrel_length * math.cos(self.barrel_angle)

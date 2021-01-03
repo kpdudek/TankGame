@@ -11,7 +11,7 @@ class MapCreator(QtWidgets.QWidget):
         self.logger = logger
         self.debug_mode = debug_mode
 
-        self.scale = 600.
+        self.scale = 400.
     
     def random_map(self):
         self.length = 3000.

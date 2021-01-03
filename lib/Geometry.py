@@ -137,26 +137,36 @@ def point_is_collision(poly,point):
     '''
     row,col = poly.vertices.shape
     vertices = poly.vertices.copy()
+
+    tmp = point.copy()
+    tmp[0]+=10000
+    ray = np.hstack((point.copy(),tmp))
     
+    collisions = 0
     for idx in range(0,col):
         if idx == col-1:
             edge = np.concatenate((vertices[:,idx].reshape(2,1),vertices[:,0].reshape(2,1)),axis=1)
         else:
             edge = np.concatenate((vertices[:,idx].reshape(2,1),vertices[:,idx+1].reshape(2,1)),axis=1)
-        a = -(edge[1,1] - edge[1,0])
-        b = edge[0,1] - edge[0,0]
-        c = -(a*edge[0,0] + b*edge[1,0])
+        # a = -(edge[1,1] - edge[1,0])
+        # b = edge[0,1] - edge[0,0]
+        # c = -(a*edge[0,0] + b*edge[1,0])
 
-        value = a*float(point[0]) + float(b*point[1]) + c
-        if value < 0:
-            return False
-
-    return True
+        # value = a*float(point[0]) + float(b*point[1]) + c
+        # if value < 0:
+        #     return False
+        if edge_is_collision(ray,edge):
+            collisions += 1
+    if collisions%2 == 0:
+        return False
+    else:
+        return True
+    # return True
 
 def poly_lies_inside(poly1,poly2):
     r,c = poly1.vertices.shape
     for idx in range(0,c):
-        if point_is_collision(poly2,poly1.vertices[:,idx]):
+        if point_is_collision(poly2,poly1.vertices[:,idx].reshape(2,1)):
             return True
     return False
 

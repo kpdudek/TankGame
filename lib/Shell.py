@@ -80,8 +80,10 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
 
             # # C Function call in python
             if Geometry.sphere_is_collision(self.collision_geometry,body.collision_geometry):
-                res = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
-                if res or Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry):
+                res1 = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
+                # res2 = Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry)
+                res2 = False
+                if res1 or res2:
                     self.physics.position = old_pose
                     self.collision_geometry.translate(-1*offset)
                     self.physics.velocity = numpy.zeros([2,1])
