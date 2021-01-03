@@ -3,7 +3,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import random, sys, os, math, time, numpy
 
-from lib import Utils, PaintUtils, Game, MainMenu, Canvas, Tank, Shell
+from lib import Utils, PaintUtils, Game, MainMenu, Canvas, Tank, Shell, GameOver
 
 class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
 
@@ -61,6 +61,10 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','1'),Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','2')]
         self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
 
+        self.game_over = GameOver.GameOver(self.logger,self.screen_width,self.screen_height)
+        self.game_over.quit_signal.connect(self.quit_game)
+        self.game_over.return_to_menu_signal.connect(self.show_main_menu)
+
         self.setCentralWidget(self.canvas)
         self.setFocus(False)
         self.canvas.setFocus(True)
@@ -75,6 +79,24 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
     def save_game(self):
         pass
 
+    def show_main_menu(self):
+        self.canvas.setFocus(False)
+        self.setFocus(True)
+
+        self.main_menu = MainMenu.MainMenu(self.logger)
+        self.main_menu.start_game_button.clicked.connect(self.start_game)
+        self.main_menu.load_game_button.clicked.connect(self.load_game)
+        
+        self.setCentralWidget(self.main_menu)
+        self.setWindowTitle('Tank Game : Welcome Screen')
+
+        try:
+            self.game_over.close()
+        except:
+            pass
+
+        QtGui.QGuiApplication.processEvents()
+
     def load_game(self):
         save_game_file = self.main_menu.save_files_combobox.currentText()
         self.logger.log(f'Loading game from save file: {save_game_file}')
@@ -84,6 +106,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.logger.log('Saving game...')
         self.save_game()
         self.canvas.pause_menu.close()
+        self.game_over.close()
         self.close()
 
     def toggle_pause_state(self):
@@ -99,29 +122,34 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
                 self.canvas.setEnabled(False)
 
     def game_loop(self):
-        # Capture loop start time
-        tic = time.time()
-        loop_time = tic - self.prev_loop_tic
-        physics_loops = int(loop_time/self.physics_step_time)
-        
-        # Compute game step
-        if not self.is_paused:
-            self.canvas.set_pixmap()
-            self.canvas.update_physics(loop_time * self.time_scale)
-            self.canvas.update_canvas(self.fps_actual,self.fps_max)
-        toc = time.time()
+        if len(self.canvas.tanks) > 1:
+            # Capture loop start time
+            tic = time.time()
+            loop_time = tic - self.prev_loop_tic
+            physics_loops = int(loop_time/self.physics_step_time)
+            
+            # Compute game step
+            if not self.is_paused:
+                self.canvas.set_pixmap()
+                self.canvas.update_physics(loop_time * self.time_scale)
+                self.canvas.update_canvas(self.fps_actual,self.fps_max)
+            toc = time.time()
 
-        # Try to compute the actual fps and max fps. Expect it might try to divide by zero
-        try:
-            self.fps_actual = 1.0/(tic-self.prev_loop_tic)
-            self.fps_max = 1.0/(toc-tic)
-        except ZeroDivisionError:
-            pass
+            # Try to compute the actual fps and max fps. Expect it might try to divide by zero
+            try:
+                self.fps_actual = 1.0/(tic-self.prev_loop_tic)
+                self.fps_max = 1.0/(toc-tic)
+            except ZeroDivisionError:
+                pass
 
-        # If you're in debug mode, pause at the end of every step
-        if self.debug_mode:
-            self.is_paused = True
+            # If you're in debug mode, pause at the end of every step
+            if self.debug_mode:
+                self.is_paused = True
 
-        # Set loop variables
-        self.loop_count += 1
-        self.prev_loop_tic = tic
+            # Set loop variables
+            self.loop_count += 1
+            self.prev_loop_tic = tic
+        else:
+            self.game_over.show()
+            self.game_timer.stop()
+            

@@ -76,6 +76,9 @@ class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBr
 
         self.set_visual_geometry()
 
+    def hit(self,shell,parent,blast=False):
+        self.logger.log(f'{self.name} was hit by a {shell.name} fired by {parent.name}')
+
     def draw_map(self,painter):
         self.map_painter(painter)
         painter.drawPolygon(self.visual_geometry)

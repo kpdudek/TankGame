@@ -32,6 +32,8 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.gravity_force = numpy.array([[0],[self.mass * Geometry.m_to_px(9.8)]])
         self.launch_force = float(shell_data['launch_force'])
         self.launch_angle = launch_angle
+        self.blast_radius = float(shell_data['blast_radius'])
+        self.max_damage = float(shell_data['max_damage'])
 
         self.physics = Physics.Physics2D(self.mass,self.max_vel)
         self.physics.position = self.collision_geometry.sphere.pose.copy()
@@ -61,6 +63,16 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
             self.point_painter(painter,self.red)
             painter.drawPoint(x,y)
 
+    def compute_blast_radius(self,collision_bodies):
+        blast_radius = Geometry.Polygon('blast_radius')
+        x = int(self.collision_geometry.sphere.pose.copy()[0])
+        y = int(self.collision_geometry.sphere.pose.copy()[1])
+        blast_radius.sphere = Geometry.Sphere(x,y,self.blast_radius)
+        for body in collision_bodies:
+            if body.name != 'ground':
+                if Geometry.sphere_is_collision(blast_radius,body.collision_geometry):
+                    body.hit(self,self.parent,blast=True)
+
     def update_position(self,forces,delta_t,collision_bodies):
         old_pose = self.physics.position.copy()
 
@@ -82,12 +94,10 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
             if Geometry.sphere_is_collision(self.collision_geometry,body.collision_geometry):
                 res1 = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
                 # res2 = Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry)
-                res2 = False
-                if res1 or res2:
-                    self.physics.position = old_pose
-                    self.collision_geometry.translate(-1*offset)
-                    self.physics.velocity = numpy.zeros([2,1])
+                if res1:
                     self.collided_with.append(body.name)
-                    self.logger.log(f'Shell fired by [{self.parent}] hit {self.collided_with}')
+                    body.hit(self,self.parent)
+                    if body.name == 'ground':
+                        self.compute_blast_radius(collision_bodies)
         
         self.update_visual_geometry()

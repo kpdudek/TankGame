@@ -156,14 +156,21 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.process_key_presses()
 
         # Update tanks movement
-        for idx,tank in enumerate(self.tanks):
-            forces = tank.gravity_force.copy()
-            if idx == self.selected_tank_idx:
-                if self.drive_direction:
-                    forces[0] += self.drive_direction * tank.drive_force
-                if self.barrel_direction:
-                    forces[1] += self.barrel_direction * tank.drive_force
-            tank.update_position(forces,delta_t,[self.map])
+        idx_offset = 0
+        for idx in range(0,len(self.tanks)):
+            tank = self.tanks[idx+idx_offset]
+            if tank.health <= 0:
+                self.tanks.pop(idx+idx_offset)
+                idx_offset -= 1
+                self.selected_tank_idx = 0
+            else:
+                forces = tank.gravity_force.copy()
+                if (idx+idx_offset) == self.selected_tank_idx:
+                    if self.drive_direction:
+                        forces[0] += self.drive_direction * tank.drive_force
+                    if self.barrel_direction:
+                        forces[1] += self.barrel_direction * tank.drive_force
+                tank.update_position(forces,delta_t,[self.map])
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
 

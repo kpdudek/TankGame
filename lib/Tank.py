@@ -15,6 +15,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.collided_with = []
         self.prev_shot_time = -1.0
         self.shots_fired = 0
+        self.xp = 0.0
 
         fp = open(f'{self.tanks_path}{tank_file}','r')
         tank_data = json.load(fp)
@@ -28,6 +29,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.drive_force = float(tank_data['drive_force'])
         self.upper_barrel_limit = 0
         self.lower_barrel_limit = -3.14
+        self.health = float(tank_data['health'])
 
         self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_tank_data(tank_data,'vertices')
@@ -45,6 +47,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.barrel_tip = self.barrel_offset + numpy.array([[x],[y]])
 
         self.power_scale = 1.0
+        self.armour_rating = float(tank_data['armour_rating'])
 
         self.visual_geometry = QtGui.QPolygonF()
         self.visual_barrel = QtGui.QPolygonF()
@@ -111,6 +114,17 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.physics.position = self.collision_geometry.sphere.pose.copy()
         self.physics.velocity = numpy.zeros([2,1])
 
+    def hit(self,shell,parent,blast=False):
+        if blast:
+            self.logger.log(f'{self.name} was hit by a {shell.name} blast radius fired by {parent.name}')
+            parent.xp += 5.0
+            self.health -= shell.max_damage * 0.5
+        else:
+            self.logger.log(f'{self.name} was hit by a {shell.name} fired by {parent.name}')
+            parent.xp += 5.0
+            self.health -= shell.max_damage
+        self.logger.log(f'{self.name} health is now: {self.health}')
+
     def update_position(self,forces,delta_t,collision_bodies):
         old_pose = self.physics.position.copy()
 
@@ -150,6 +164,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             starting_pose = self.barrel_tip
             self.prev_shot_time = t
             self.shots_fired += 1
-            return Shell.Shell(self.logger,self.debug_mode,self.name,'simple.shell',f'{self.shots_fired}',starting_pose,self.barrel_angle)
+            return Shell.Shell(self.logger,self.debug_mode,self,'simple.shell',f'{self.shots_fired}',starting_pose,self.barrel_angle)
         else:
             return None
