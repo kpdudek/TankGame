@@ -108,9 +108,13 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             elif key == QtCore.Qt.Key_S:
                 self.barrel_direction += -1.0
             elif key == QtCore.Qt.Key_Up:
-                self.tanks[self.selected_tank_idx].barrel_angle += -0.03
+                self.power_scale += 0.01
             elif key == QtCore.Qt.Key_Down:
-                self.tanks[self.selected_tank_idx].barrel_angle += 0.03
+                self.power_scale -= 0.01
+            elif key == QtCore.Qt.Key_Left:
+                self.tanks[self.selected_tank_idx].rotate_barrel(-1)
+            elif key == QtCore.Qt.Key_Right:
+                self.tanks[self.selected_tank_idx].rotate_barrel(1)
             
             elif key == QtCore.Qt.Key_F:
                 shell = self.tanks[self.selected_tank_idx].fire_shell()

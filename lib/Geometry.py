@@ -24,9 +24,14 @@ def m_to_px(meters):
     scale = 50.0 / 7.94 # 50px / 7.94m
     return meters * scale
 
-
 def rotate_2d(vertices,angle):
-    pass
+    rot_mat = np.array([[cos(angle),-sin(angle)],[sin(angle),cos(angle)]])
+    r,c = vertices.shape
+    for idx in range(0,c):
+        res = np.matmul(rot_mat,vertices[:,idx].reshape(2,1))
+        vertices[0,idx] = res[0]
+        vertices[1,idx] = res[1]
+    return vertices
 
 def edge_angle(ang_type,*argv):
     '''
@@ -218,6 +223,8 @@ class Polygon(object):
         self.game_id = game_id
         self.vertices = None
         self.sphere = None
+        self.origin = np.zeros([2,1])
+        self.center_of_mass = None
 
     def custom(self,vertices):
         self.vertices = vertices
@@ -231,9 +238,9 @@ class Polygon(object):
         self.vertices = vertices
         self.set_bounding_sphere()
 
-    def from_tank_data(self,tank_data):
-        vertices = np.zeros([2,len(tank_data['vertices'])])
-        for idx,vertex in enumerate(tank_data['vertices']):
+    def from_tank_data(self,tank_data,key):
+        vertices = np.zeros([2,len(tank_data[key])])
+        for idx,vertex in enumerate(tank_data[key]):
             vertices[0,idx] = vertex[0]
             vertices[1,idx] = vertex[1]
         self.vertices = vertices
@@ -262,14 +269,23 @@ class Polygon(object):
             if ray > rad:
                 rad = ray 
         self.sphere = Sphere(x_c,y_c,rad)
+        self.center_of_mass = centroid
 
     def translate(self,vec):
+        self.origin += vec
+        self.center_of_mass += vec
         self.vertices += vec
         self.sphere.pose += vec
 
     def teleport(self,vec):
-        diff = vec - self.sphere.pose
+        diff = vec - self.origin
         self.translate(diff)
 
-    def rotate(self,ang):
-        pass
+    def rotate(self,sign,step_size):
+        offset = self.origin.copy()
+        tmp_vertices = self.vertices.copy()
+        tmp_vertices -= offset
+        tmp_vertices = rotate_2d(tmp_vertices,sign*step_size)
+        tmp_vertices += offset
+        self.vertices = tmp_vertices
+        self.set_bounding_sphere()
