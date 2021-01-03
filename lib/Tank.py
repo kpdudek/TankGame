@@ -42,6 +42,8 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         y = self.barrel_length * math.sin(self.barrel_angle)
         self.barrel_tip = self.barrel_offset + numpy.array([[x],[y]])
 
+        self.power_scale = 1.0
+
         self.visual_geometry = QtGui.QPolygonF()
         self.visual_barrel = QtGui.QPolygonF()
         self.update_visual_geometry()

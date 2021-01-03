@@ -99,23 +99,43 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
     def process_key_presses(self):
         for key in self.keys_pressed:
+            # D - move right
             if key == QtCore.Qt.Key_D:
                 self.drive_direction += 1.0 #rad
+            
+            # A - move left
             elif key == QtCore.Qt.Key_A:
                 self.drive_direction += -1.0 #rad
+            
+            # W - move up
             elif key == QtCore.Qt.Key_W:
                 self.barrel_direction += 1.0
+            
+            # S - move down
             elif key == QtCore.Qt.Key_S:
                 self.barrel_direction += -1.0
+            
+            # up arrow - raise tank firing power
             elif key == QtCore.Qt.Key_Up:
-                self.power_scale += 0.01
+                self.tanks[self.selected_tank_idx].power_scale += 0.01
+                if self.tanks[self.selected_tank_idx].power_scale > 1.0:
+                    self.tanks[self.selected_tank_idx].power_scale = 1.0
+            
+            # down arrow - lower tank firing power
             elif key == QtCore.Qt.Key_Down:
-                self.power_scale -= 0.01
+                self.tanks[self.selected_tank_idx].power_scale -= 0.01
+                if self.tanks[self.selected_tank_idx].power_scale < .1:
+                    self.tanks[self.selected_tank_idx].power_scale = .1
+            
+            # left arrow - rotate barrel counter clockwise
             elif key == QtCore.Qt.Key_Left:
                 self.tanks[self.selected_tank_idx].rotate_barrel(-1)
+            
+            # right arrow - rotate barrel clockwise
             elif key == QtCore.Qt.Key_Right:
                 self.tanks[self.selected_tank_idx].rotate_barrel(1)
             
+            # F - fire shell
             elif key == QtCore.Qt.Key_F:
                 shell = self.tanks[self.selected_tank_idx].fire_shell()
                 if shell:
@@ -151,8 +171,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for idx,shell in enumerate(self.shells):
             if not shell.collided_with:
                 if not shell.launched:
-                    x = shell.launch_force*math.cos(shell.launch_angle)
-                    y = shell.launch_force*math.sin(shell.launch_angle)
+                    scale = self.tanks[self.selected_tank_idx].power_scale
+                    x = scale*shell.launch_force*math.cos(shell.launch_angle)
+                    y = scale*shell.launch_force*math.sin(shell.launch_angle)
                     forces = numpy.array([[x],[y]])
                     shell.launched = True
                 else:
