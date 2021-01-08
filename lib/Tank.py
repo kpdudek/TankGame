@@ -7,7 +7,7 @@ from lib import Utils, PaintUtils, Geometry, Physics, Shell
 
 class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
 
-    def __init__(self,logger, debug_mode, tank_file, name):
+    def __init__(self,logger, debug_mode, tank_file, name, color):
         super().__init__()
         self.logger = logger
         self.debug_mode = debug_mode
@@ -22,6 +22,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.logger.log(f'Creating tank with params: {tank_data}')
 
         self.name = f"{tank_data['name']}_{name}"
+        self.color = color
         self.mass = float(tank_data['mass'])
         self.max_vel = Geometry.m_to_px(float(tank_data['max_vel']))
         self.fire_rate = 1.0 / (float(tank_data['fire_rate']) / 60.) # seconds per round
@@ -75,7 +76,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             self.visual_barrel.append(point)
 
     def draw_tank(self,painter):
-        self.tank_painter(painter,self.forest_green)
+        self.tank_painter(painter,self.color)
         painter.drawPolygon(self.visual_geometry)
         painter.drawPolygon(self.visual_barrel)
 

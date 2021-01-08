@@ -3,7 +3,7 @@
     "vertices":[[0,-2],[0,-2],[4,-2],[4,2],[0,2]],
     "mass":5,
     "max_vel":365,
-    "launch_force":50000,
-    "blast_radius":100,
-    "max_damage":200
+    "launch_force":150000,
+    "blast_radius":50,
+    "max_damage":25
 }

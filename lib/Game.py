@@ -50,7 +50,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.show()
 
     def start_game(self):
-        self.logger.log('Creating game!')
+        self.logger.log(f'Starting game: {self.main_menu.game_name_line_edit.text()}')
         self.setWindowTitle('Tank Game : Running')
 
         self.debug_mode = self.main_menu.debug_mode_checkbox.isChecked()
@@ -58,7 +58,12 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.canvas = Canvas.Canvas(self.logger,self.debug_mode,self.screen_width,self.screen_height)
         self.canvas.pause_menu.quit_signal.connect(self.quit_game)
         self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
-        self.canvas.tanks = [Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','1'),Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank','2')]
+        
+        tank_colors = [self.forest_green,self.midnight_blue,self.star_gold]
+        for tank_idx in range(0,self.main_menu.number_of_tanks_spinbox.value()):
+            color = tank_colors[random.randint(0,len(tank_colors)-1)]
+            self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',str(tank_idx+1),color))
+        
         self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
 
         self.game_over = GameOver.GameOver(self.logger,self.screen_width,self.screen_height)

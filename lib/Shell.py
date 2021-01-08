@@ -15,6 +15,8 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.shell_file = shell_file
         self.collided_with = []
         self.launched = False
+        self.collided = False
+        self.done = False
 
         fp = open(f'{self.shells_path}{shell_file}','r')
         shell_data = json.load(fp)
@@ -74,11 +76,13 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
                     body.hit(self,self.parent,blast=True)
 
     def update_position(self,forces,delta_t,collision_bodies):
+        if self.collided:
+            self.done = True
+            return
+        
         old_pose = self.physics.position.copy()
-
         offset = self.physics.accelerate(forces,delta_t)
         self.collision_geometry.translate(offset)
-
         for body in collision_bodies:            
             data = self.collision_geometry.vertices
             r1,c1 = self.collision_geometry.vertices.shape
@@ -99,5 +103,6 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
                     body.hit(self,self.parent)
                     if body.name == 'ground':
                         self.compute_blast_radius(collision_bodies)
+                    self.collided = True
         
         self.update_visual_geometry()

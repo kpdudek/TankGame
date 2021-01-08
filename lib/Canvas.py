@@ -178,7 +178,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         idx_offset = 0
         for idx in range(0,len(self.shells)):
             shell = self.shells[idx+idx_offset]
-            if not shell.collided_with:
+            if not shell.done:
                 if not shell.launched:
                     scale = self.tanks[self.selected_tank_idx].power_scale
                     x = scale*shell.launch_force*math.cos(shell.launch_angle)
