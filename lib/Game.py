@@ -155,6 +155,8 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
             self.loop_count += 1
             self.prev_loop_tic = tic
         else:
+            winning_tank = f'{self.canvas.tanks[0].name} won!'
+            self.game_over.winning_tank_label.setText(winning_tank)
             self.game_over.show()
             self.game_timer.stop()
             

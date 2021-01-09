@@ -15,7 +15,7 @@ class GameOver(QtWidgets.QWidget,Utils.FilePaths):
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setWindowTitle('Game Over')
-
+    
         self.logger = logger
 
         self.screen_width = screen_width
