@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy
+import random, sys, os, math, time, numpy, json
 
 from lib import Utils, PaintUtils, Game, MainMenu, Canvas, Tank, Shell, GameOver
 
@@ -50,21 +50,35 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.show()
 
     def start_game(self):
-        self.logger.log(f'Starting game: {self.main_menu.game_name_line_edit.text()}')
+        self.save_data = {}
+        self.save_file_name = self.main_menu.game_name_line_edit.text()
+        self.save_data.update({'file_name':self.save_file_name})
+
+        self.logger.log(f'Starting game: {self.save_file_name}')
         self.setWindowTitle('Tank Game : Running')
 
         self.debug_mode = self.main_menu.debug_mode_checkbox.isChecked()
+        self.save_data.update({'debug_mode':self.debug_mode})
 
         self.canvas = Canvas.Canvas(self.logger,self.debug_mode,self.screen_width,self.screen_height)
         self.canvas.pause_menu.quit_signal.connect(self.quit_game)
         self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
+        self.canvas.pause_menu.main_menu_signal.connect(self.show_main_menu)
+        self.canvas.pause_menu.save_game_signal.connect(self.save_game)
         
         tank_colors = [self.forest_green,self.midnight_blue,self.star_gold]
-        for tank_idx in range(0,self.main_menu.number_of_tanks_spinbox.value()):
+        self.tank_count = self.main_menu.number_of_tanks_spinbox.value()
+        self.save_data.update({'tank_count':self.tank_count})
+        selected_colors = []
+        for tank_idx in range(0,self.tank_count):
             color = tank_colors[random.randint(0,len(tank_colors)-1)]
+            selected_colors.append(color)
             self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',str(tank_idx+1),color))
-        
-        self.canvas.load_map(self.main_menu.map_files_combobox.currentText())
+        self.save_data.update({'tank_colors':selected_colors})
+
+        self.map_file = self.main_menu.map_files_combobox.currentText()
+        self.save_data.update({'map_file':self.map_file})
+        self.canvas.load_map(self.map_file)
 
         self.game_over = GameOver.GameOver(self.logger,self.screen_width,self.screen_height)
         self.game_over.quit_signal.connect(self.quit_game)
@@ -80,13 +94,77 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
 
         self.prev_loop_tic = time.time()
         self.game_timer.start(1000/self.fps)
+        self.is_paused = False
 
     def save_game(self):
-        pass
+        self.logger.log('Saving game...')
+        try:
+            fp = open(f'{self.saves_path}{self.save_file_name}.json','w')
+            json.dump(self.save_data,fp)
+            fp.close()
+        except:
+            self.logger.log('Failed to save the game!',color='r')
+
+    def load_game(self):
+        self.save_file_name = self.main_menu.save_files_combobox.currentText()
+        self.logger.log(f'Loading game from save file: {self.save_file_name}')
+
+        fp = open(f'{self.saves_path}{self.save_file_name}','r')
+        self.save_data = json.load(fp)
+        fp.close()
+        
+        self.save_file_name = self.save_data['file_name']
+        self.logger.log(f'Starting game: {self.save_file_name}')
+        self.setWindowTitle('Tank Game : Running')
+
+        self.debug_mode = self.save_data['debug_mode']
+
+        self.canvas = Canvas.Canvas(self.logger,self.debug_mode,self.screen_width,self.screen_height)
+        self.canvas.pause_menu.quit_signal.connect(self.quit_game)
+        self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
+        self.canvas.pause_menu.main_menu_signal.connect(self.show_main_menu)
+        self.canvas.pause_menu.save_game_signal.connect(self.save_game)
+        
+        self.tank_colors = self.save_data['tank_colors']
+        self.tank_count = self.save_data['tank_count']
+        for tank_idx in range(0,self.tank_count):
+            color = self.tank_colors[tank_idx]
+            self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',str(tank_idx+1),color))
+
+        self.map_file = self.save_data['map_file']
+        self.canvas.load_map(self.map_file)
+
+        self.game_over = GameOver.GameOver(self.logger,self.screen_width,self.screen_height)
+        self.game_over.quit_signal.connect(self.quit_game)
+        self.game_over.return_to_menu_signal.connect(self.show_main_menu)
+
+        self.setCentralWidget(self.canvas)
+        self.setFocus(False)
+        self.canvas.setFocus(True)
+        self.showMaximized()
+
+        if self.debug_mode:
+            self.logger.log(f'Starting game in debug mode! Use the "n" key to step through frames')
+
+        self.prev_loop_tic = time.time()
+        self.game_timer.start(1000/self.fps)
+        self.is_paused = False
+
+    def quit_game(self):
+        self.logger.log('Shutdown signal received...')
+        self.save_game()
+        self.canvas.pause_menu.close()
+        self.game_over.close()
+        self.close()
 
     def show_main_menu(self):
         self.canvas.setFocus(False)
         self.setFocus(True)
+        
+        try:
+            self.canvas.pause_menu.close()
+        except:
+            pass
 
         self.main_menu = MainMenu.MainMenu(self.logger)
         self.main_menu.start_game_button.clicked.connect(self.start_game)
@@ -101,18 +179,6 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
             pass
 
         QtGui.QGuiApplication.processEvents()
-
-    def load_game(self):
-        save_game_file = self.main_menu.save_files_combobox.currentText()
-        self.logger.log(f'Loading game from save file: {save_game_file}')
-
-    def quit_game(self):
-        self.logger.log('Shutdown signal received...')
-        self.logger.log('Saving game...')
-        self.save_game()
-        self.canvas.pause_menu.close()
-        self.game_over.close()
-        self.close()
 
     def toggle_pause_state(self):
         if self.is_paused:

@@ -11,32 +11,29 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         super().__init__()
         uic.loadUi(f'{self.user_path}ui/canvas.ui',self)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-
         self.logger = logger
         self.debug_mode = debug_mode
+        
+        # Drawing data
         self.screen_width = screen_width
         self.screen_height = screen_height
-
         self.zoom = 0
         self.camera_offset = numpy.array([[0.],[0.]])
-        self.keys_pressed = []
         self.width = -1
         self.height = -1
+        self.keys_pressed = []
 
+        # Game data
         self.tanks = []
+        self.shells = []
+        self.map = None
+        self.collision_bodies = []
         self.selected_tank_idx = 0
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
 
-        self.shells = []
-
-        self.map = None
-
-        self.collision_bodies = []
-
         self.canvas = QtWidgets.QLabel()
         self.layout.addWidget(self.canvas)
-
         self.pause_menu = PauseMenu.PauseMenu(logger,screen_width,screen_height)
 
     ##################################################################################
@@ -45,18 +42,36 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     def mousePressEvent(self,e):
         self.logger.log(f'Mouse Press: {e.button()} {e.x()} {e.y()}')
         self.mouse_pose = numpy.array([[e.x()],[e.y()]])
+        self.prev_mouse_pose = numpy.array([[e.x()],[e.y()]])
+
+        for idx,tank in enumerate(self.tanks):
+            clicked = Geometry.point_is_collision(tank.collision_geometry,self.mouse_pose)
+            if clicked:
+                self.logger.log(f'Mouse collided with: {tank.name}')
+                self.drag_tank_idx = idx
+                return
         
-        self.collision_bodies = self.tanks + self.shells + [self.map]
+        self.collision_bodies = self.shells + [self.map]
         for body in self.collision_bodies:
             selected_entity = Geometry.point_is_collision(body.collision_geometry,self.mouse_pose)
             if selected_entity:
                 self.logger.log(f'Mouse collided with: {body.name}')
     
     def mouseMoveEvent(self,e):
-        pass
+        try:
+            self.mouse_pose = numpy.array([[e.x()],[e.y()]])
+            self.drag_vel = self.mouse_pose - self.prev_mouse_pose
+            self.tanks[self.drag_tank_idx].teleport(self.mouse_pose)
+            self.tanks[self.drag_tank_idx].physics.velocity = numpy.zeros([2,1])
+            self.prev_mouse_pose = numpy.array([[e.x()],[e.y()]])
+        except:
+            pass
 
     def mouseReleaseEvent(self,e):
-        pass
+        try:
+            self.tanks[self.drag_tank_idx].physics.velocity += self.drag_vel * 1000
+        except:
+            pass
 
     def wheelEvent(self,e):
         self.zoom += e.angleDelta().y()/120
@@ -73,15 +88,32 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
         if event.key() == QtCore.Qt.Key_N:
             self.pause_menu.pause_signal.emit()
+
+        if event.key() == QtCore.Qt.Key_I:
+            self.next_turn()
     
     def keyReleaseEvent(self, event):
-        if not event.isAutoRepeat():
-            # self.logger.log(f'Key Released: {event.key()}')
-            self.keys_pressed.remove(event.key())
+        try:
+            if not event.isAutoRepeat():
+                # self.logger.log(f'Key Released: {event.key()}')
+                self.keys_pressed.remove(event.key())
+        except:
+            pass
 
+    ##################################################################################
+    # Signal Connections
+    ##################################################################################
+            
     ##################################################################################
     # Class Methods
     ##################################################################################
+    def next_turn(self):
+        self.logger.log('Next turn...')
+        self.tanks[self.selected_tank_idx].shots_fired = 0
+        self.selected_tank_idx += 1
+        if (self.selected_tank_idx > len(self.tanks)-1) or (self.selected_tank_idx < 0):
+            self.selected_tank_idx = 0
+    
     def load_map(self,map_file):
         self.map = Map.Map(self.logger,self.debug_mode)
 
@@ -162,7 +194,6 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             if tank.health <= 0:
                 self.tanks.pop(idx+idx_offset)
                 idx_offset -= 1
-                self.selected_tank_idx = 0
             else:
                 forces = tank.gravity_force.copy()
                 if (idx+idx_offset) == self.selected_tank_idx:

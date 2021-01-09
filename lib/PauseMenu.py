@@ -6,18 +6,20 @@ import random, sys, os, math, time, numpy, json
 from lib import Utils, PaintUtils, Geometry
 
 class PauseMenu(QtWidgets.QWidget,Utils.FilePaths):
-    quit_signal = QtCore.pyqtSignal()
     pause_signal = QtCore.pyqtSignal()
+    save_game_signal = QtCore.pyqtSignal()
+    main_menu_signal = QtCore.pyqtSignal()
+    quit_signal = QtCore.pyqtSignal()
 
     def __init__(self,logger,screen_width,screen_height):
         super().__init__()
         uic.loadUi(f'{self.user_path}ui/pause_menu.ui',self)
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-        # self.setWindowFlag(QtCore.Qt.FramelessWindowHint)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setWindowTitle('Pause Menu')
 
         self.logger = logger
+        self.return_to_menu_flag = False
 
         self.screen_width = screen_width
         self.screen_height = screen_height
@@ -31,22 +33,32 @@ class PauseMenu(QtWidgets.QWidget,Utils.FilePaths):
         self.setGeometry(QtCore.QRect(self.offset_x,self.offset_y,self.width,self.height))
 
         # Qt Signal Connections
-        self.quit_button.clicked.connect(self.quit_game)
         self.resume_button.clicked.connect(self.resume_game)
-
-    def quit_game(self):
-        self.quit_signal.emit()
+        self.return_to_menu_button.clicked.connect(self.return_to_menu)
+        self.save_game_button.clicked.connect(self.save_game)
+        self.quit_button.clicked.connect(self.quit_game)
 
     def showEvent(self,event):
         self.setGeometry(QtCore.QRect(self.offset_x,self.offset_y,self.width,self.height))
 
     def closeEvent(self, event):
-        self.pause_signal.emit()
+        if not self.return_to_menu_flag:
+            self.pause_signal.emit()
         event.accept()
-
-    def resume_game(self):
-        self.close()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
             self.close()
+
+    def resume_game(self):
+        self.close()
+
+    def save_game(self):
+        self.save_game_signal.emit()
+
+    def return_to_menu(self):
+        self.return_to_menu_flag = True
+        self.main_menu_signal.emit()
+
+    def quit_game(self):
+        self.quit_signal.emit()

@@ -6,6 +6,7 @@ import random, sys, os, math, time, numpy, json, ctypes
 from lib import Utils, PaintUtils, Geometry, Physics
 
 class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
+    done_signal = QtCore.pyqtSignal()
 
     def __init__(self,logger, debug_mode, parent, shell_file, name, starting_pose, launch_angle):
         super().__init__()
@@ -20,6 +21,7 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
 
         fp = open(f'{self.shells_path}{shell_file}','r')
         shell_data = json.load(fp)
+        fp.close()
 
         self.collision_geometry = Geometry.Polygon(name)
         self.collision_geometry.from_shell_data(shell_data)
@@ -44,6 +46,11 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.c_double_p = ctypes.POINTER(ctypes.c_double)
         self.cc_fun = ctypes.CDLL(f'{self.lib_path}{self.cc_lib_path}') # Or full path to file
         self.cc_fun.polygon_is_collision.argtypes = [self.c_double_p,ctypes.c_int,ctypes.c_int,self.c_double_p,ctypes.c_int,ctypes.c_int] 
+
+        self.heartbeats = 0
+        self.heartbeat_timer = QtCore.QTimer()
+        self.heartbeat_timer.timeout.connect(self.heartbeat)
+        self.heartbeat_timer.start(1000 * 15)
 
     def update_visual_geometry(self):
         self.visual_geometry = QtGui.QPolygonF()
@@ -78,6 +85,7 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
     def update_position(self,forces,delta_t,collision_bodies):
         if self.collided:
             self.done = True
+            self.done_signal.emit()
             return
         
         old_pose = self.physics.position.copy()
@@ -98,7 +106,8 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
             if Geometry.sphere_is_collision(self.collision_geometry,body.collision_geometry):
                 res1 = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
                 # res2 = Geometry.poly_lies_inside(self.collision_geometry,body.collision_geometry)
-                if res1:
+                res2 = False
+                if res1 or res2:
                     self.collided_with.append(body.name)
                     body.hit(self,self.parent)
                     if body.name == 'ground':
@@ -106,3 +115,13 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
                     self.collided = True
         
         self.update_visual_geometry()
+
+    def heartbeat(self):
+        if self.heartbeats > 2:
+            self.logger.log(f'Deleting ({self.name}) due to inactivity...')
+            self.deleteLater()
+            return
+        
+        self.logger.log(f'Shell ({self.name}) is still alive...')
+        self.heartbeats += 1
+

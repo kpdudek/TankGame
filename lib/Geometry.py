@@ -133,7 +133,7 @@ def edge_is_collision(edge1,edge2,endpoint_collision=False):
 
 def point_is_collision(poly,point):
     '''
-    Check if the point lies inside a polygon
+    Check if the point lies inside a concave or convex polygon
     '''
     row,col = poly.vertices.shape
     vertices = poly.vertices.copy()
@@ -148,27 +148,21 @@ def point_is_collision(poly,point):
             edge = np.concatenate((vertices[:,idx].reshape(2,1),vertices[:,0].reshape(2,1)),axis=1)
         else:
             edge = np.concatenate((vertices[:,idx].reshape(2,1),vertices[:,idx+1].reshape(2,1)),axis=1)
-        # a = -(edge[1,1] - edge[1,0])
-        # b = edge[0,1] - edge[0,0]
-        # c = -(a*edge[0,0] + b*edge[1,0])
-
-        # value = a*float(point[0]) + float(b*point[1]) + c
-        # if value < 0:
-        #     return False
         if edge_is_collision(ray,edge):
             collisions += 1
     if collisions%2 == 0:
         return False
     else:
         return True
-    # return True
 
 def poly_lies_inside(poly1,poly2):
-    r,c = poly1.vertices.shape
-    for idx in range(0,c):
-        if point_is_collision(poly2,poly1.vertices[:,idx].reshape(2,1)):
-            return True
-    return False
+    '''
+    Check if the center of mass of poly1 lies inside poly2
+    '''
+    if point_is_collision(poly2,poly1.sphere.pose.reshape(2,1)):
+        return True
+    else:
+        return False
 
 def sphere_is_collision(poly1,poly2):
     '''
