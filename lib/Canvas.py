@@ -32,6 +32,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.selected_tank_idx = 0
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
+        self.rotation_direction = 0.0
 
         self.canvas = QtWidgets.QLabel()
         self.layout.addWidget(self.canvas)
@@ -164,11 +165,11 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
             # rotate tank counter clockwise
             elif key == key_map['Rotate counter clockwise']['code']:
-                self.tanks[self.selected_tank_idx].rotate(-1)
+                self.rotation_direction= -1.0
             
             # rotate tank clockwise
             elif key == key_map['Rotate clockwise']['code']:
-                self.tanks[self.selected_tank_idx].rotate(1)
+                self.rotation_direction = 1.0
             
             # raise tank firing power
             elif key == key_map['Increase cannon power']['code']:
@@ -238,9 +239,12 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                             forces[0] += self.drive_direction * tank.drive_force
                         if self.barrel_direction:
                             forces[1] += self.barrel_direction * tank.drive_force
-                tank.update_position(forces,delta_t,[self.map])
+                    tank.update_position(forces,delta_t,self.rotation_direction,[self.map])
+                else:
+                    tank.update_position(forces,delta_t,0.0,[self.map])
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
+        self.rotation_direction= 0.0
 
         # Update shells movement
         idx_offset = 0

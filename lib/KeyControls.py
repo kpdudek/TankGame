@@ -22,7 +22,7 @@ class ControlsMenu(QtWidgets.QWidget,Utils.FilePaths):
         self.screen_height = screen_height
 
         self.width = 600
-        self.height = 400.0        
+        self.height = 500.0        
 
         self.offset_x = int((self.screen_width-self.width)/2.0)
         self.offset_y = int((self.screen_height-self.height)/2.0)

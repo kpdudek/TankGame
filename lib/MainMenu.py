@@ -19,6 +19,10 @@ class MainMenu(QtWidgets.QWidget,Utils.FilePaths):
         self.list_maps()
         self.list_shells()
         self.list_tanks()
+    
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.close()
 
     def delete_save_file(self):
         file_name = self.save_files_combobox.currentText()

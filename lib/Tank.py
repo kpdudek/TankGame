@@ -167,12 +167,14 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
     def rotate(self,sign):
         step_size = 0.01
         self.angle += (step_size * sign)
-        print(self.angle)
         
         self.collision_geometry.rotate(sign,step_size)
+        self.collision_geometry.set_bounding_sphere()
+        self.physics.position = self.collision_geometry.sphere.pose.copy()
+
         prev_offset = self.barrel_offset.copy()
         tmp_offset = Geometry.rotate_2d(prev_offset,sign*step_size)
-        print(tmp_offset)
+
         offset = tmp_offset - prev_offset
         self.barrel_offset = tmp_offset
         self.barrel_geometry.teleport(self.collision_geometry.origin + self.barrel_offset)
@@ -182,9 +184,10 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         y = self.barrel_length * math.sin(self.barrel_angle)
         self.barrel_tip = self.collision_geometry.origin + self.barrel_offset + numpy.array([[x],[y]])
 
-    def update_position(self,forces,delta_t,collision_bodies):
+    def update_position(self,forces,delta_t,angle,collision_bodies):
         old_pose = self.physics.position.copy()
 
+        self.rotate(angle)
         offset = self.physics.accelerate(forces,delta_t)
         self.collision_geometry.translate(offset)
         self.barrel_geometry.translate(offset)
@@ -206,6 +209,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             if Geometry.sphere_is_collision(self.collision_geometry,body.collision_geometry):
                 res = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
                 if res:
+                    self.rotate(-1.0 * angle)
                     self.physics.position = old_pose
                     self.collision_geometry.translate(-1*offset)
                     self.barrel_geometry.translate(-1*offset)
