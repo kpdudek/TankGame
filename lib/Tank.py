@@ -29,6 +29,8 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.xp = 0.0
         self.turn_over = False    
 
+        self.angle = 0.0
+
         self.barrel_angle = 0.0
         self.power_scale = 1.0
         self.armour_rating = None
@@ -44,7 +46,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.mass = float(tank_data['mass'])
         self.max_vel = Geometry.m_to_px(float(tank_data['max_vel']))
         self.fire_rate = 1.0 / (float(tank_data['fire_rate']) / 60.) # seconds per round
-        self.gravity_force = numpy.array([[0],[self.mass * Geometry.m_to_px(9.8)]])
+        self.gravity_force = numpy.array([[0.0],[self.mass * Geometry.m_to_px(9.8)]])
         self.drive_force = float(tank_data['drive_force'])
         self.upper_barrel_limit = math.radians(20.0)
         self.lower_barrel_limit = math.radians(-200.0)
@@ -57,10 +59,10 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.barrel_geometry = Geometry.Polygon(self.name)
         self.barrel_geometry.from_tank_data(tank_data,'barrel')
         x,y = tank_data['barrel_offset']
-        self.barrel_offset = numpy.array([[x],[y]])
+        self.barrel_offset = numpy.array([[float(x)],[float(y)]])
         self.barrel_geometry.translate(self.barrel_offset)
 
-        self.barrel_length = tank_data['barrel_length']
+        self.barrel_length = float(tank_data['barrel_length'])
         x = self.barrel_length * math.cos(self.barrel_angle)
         y = self.barrel_length * math.sin(self.barrel_angle)
         self.barrel_tip = self.barrel_offset + numpy.array([[x],[y]])
@@ -158,6 +160,24 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.barrel_angle = step_angle
         self.barrel_geometry.rotate(sign,step_size)
 
+        x = self.barrel_length * math.cos(self.barrel_angle)
+        y = self.barrel_length * math.sin(self.barrel_angle)
+        self.barrel_tip = self.collision_geometry.origin + self.barrel_offset + numpy.array([[x],[y]])
+
+    def rotate(self,sign):
+        step_size = 0.01
+        self.angle += (step_size * sign)
+        print(self.angle)
+        
+        self.collision_geometry.rotate(sign,step_size)
+        prev_offset = self.barrel_offset.copy()
+        tmp_offset = Geometry.rotate_2d(prev_offset,sign*step_size)
+        print(tmp_offset)
+        offset = tmp_offset - prev_offset
+        self.barrel_offset = tmp_offset
+        self.barrel_geometry.teleport(self.collision_geometry.origin + self.barrel_offset)
+
+        self.barrel_geometry.rotate(sign,step_size)
         x = self.barrel_length * math.cos(self.barrel_angle)
         y = self.barrel_length * math.sin(self.barrel_angle)
         self.barrel_tip = self.collision_geometry.origin + self.barrel_offset + numpy.array([[x],[y]])

@@ -52,6 +52,8 @@ class ControlsMenu(QtWidgets.QWidget,Utils.FilePaths):
             'Drive left': {'text':'A','code':Qt.Key_A,'row':None},
             'Drive up': {'text':'W','code':Qt.Key_W,'row':None},
             'Drive down': {'text':'S','code':Qt.Key_S,'row':None},
+            'Rotate counter clockwise': {'text':'Q','code':Qt.Key_Q,'row':None},
+            'Rotate clockwise': {'text':'E','code':Qt.Key_E,'row':None},
             'Increase cannon power': {'text':'Up arrow','code':Qt.Key_Up,'row':None},
             'Lower cannon power': {'text':'Down arrow','code':Qt.Key_Down,'row':None},
             'Rotate cannon counter clockwise': {'text':'Right arrow','code':Qt.Key_Left,'row':None},

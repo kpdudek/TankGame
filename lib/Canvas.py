@@ -142,54 +142,62 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         gas_val = 0
         key_map = self.controls_menu.key_map
         for key in self.keys_pressed:
-            # D - move right
+            # move right
             if key == key_map['Drive right']['code']:
                 self.drive_direction += 1.0 #rad
                 gas_val += 1.0
             
-            # A - move left
+            # move left
             elif key == key_map['Drive left']['code']:
                 self.drive_direction += -1.0 #rad
                 gas_val += 1.0
             
-            # W - move up
+            # move up
             elif key == key_map['Drive up']['code']:
                 self.barrel_direction += 1.0
                 gas_val += 1.0
             
-            # S - move down
+            # move down
             elif key == key_map['Drive down']['code']:
                 self.barrel_direction += -1.0
                 gas_val += 1.0
+
+            # rotate tank counter clockwise
+            elif key == key_map['Rotate counter clockwise']['code']:
+                self.tanks[self.selected_tank_idx].rotate(-1)
             
-            # up arrow - raise tank firing power
+            # rotate tank clockwise
+            elif key == key_map['Rotate clockwise']['code']:
+                self.tanks[self.selected_tank_idx].rotate(1)
+            
+            # raise tank firing power
             elif key == key_map['Increase cannon power']['code']:
                 self.tanks[self.selected_tank_idx].power_scale += 0.005
                 if self.tanks[self.selected_tank_idx].power_scale > 1.0:
                     self.tanks[self.selected_tank_idx].power_scale = 1.0
             
-            # down arrow - lower tank firing power
+            # lower tank firing power
             elif key == key_map['Lower cannon power']['code']:
                 self.tanks[self.selected_tank_idx].power_scale -= 0.005
                 if self.tanks[self.selected_tank_idx].power_scale < .1:
                     self.tanks[self.selected_tank_idx].power_scale = .1
             
-            # left arrow - rotate barrel counter clockwise
+            # rotate barrel counter clockwise
             elif key == key_map['Rotate cannon counter clockwise']['code']:
                 self.tanks[self.selected_tank_idx].rotate_barrel(-1)
             
-            # right arrow - rotate barrel clockwise
+            # rotate barrel clockwise
             elif key == key_map['Rotate cannon clockwise']['code']:
                 self.tanks[self.selected_tank_idx].rotate_barrel(1)
             
-            # F - fire shell
+            # fire shell
             elif key == key_map['Fire cannon']['code']:
                 shell = self.tanks[self.selected_tank_idx].fire_shell()
                 if shell:
                     self.shells.append(shell)
                     self.logger.log(f'Tank [{self.tanks[self.selected_tank_idx].name}] fired a [{shell.name}]')
                 
-            # T - Switch shell
+            # switch shell
             elif key == key_map['Switch shell']['code']:
                 if not self.shell_switched:
                     self.tanks[self.selected_tank_idx].switch_shell()
