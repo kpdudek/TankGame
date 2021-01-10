@@ -285,11 +285,15 @@ class Polygon(object):
         diff = vec - self.origin
         self.translate(diff)
 
-    def rotate(self,sign,step_size):
-        offset = self.origin.copy()
+    def rotate(self,sign,step_size,point=None):
+        if type(point) != type(None):
+            offset = point.copy()
+        else:
+            offset = self.origin.copy()
         tmp_vertices = self.vertices.copy()
         tmp_vertices -= offset
         tmp_vertices = rotate_2d(tmp_vertices,sign*step_size)
         tmp_vertices += offset
         self.vertices = tmp_vertices
+        self.origin = self.vertices[:,0].reshape(2,1).copy()
         self.set_bounding_sphere()
