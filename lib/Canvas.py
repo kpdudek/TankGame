@@ -3,7 +3,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import random, sys, os, math, time, numpy, json
 
-from lib import Utils, PaintUtils, Geometry, PauseMenu, Map
+from lib import Utils, PaintUtils, Geometry, PauseMenu, Map, KeyControls
 
 class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
 
@@ -34,7 +34,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
         self.canvas = QtWidgets.QLabel()
         self.layout.addWidget(self.canvas)
+
         self.pause_menu = PauseMenu.PauseMenu(logger,screen_width,screen_height)
+        self.pause_menu.controls_button.clicked.connect(self.show_controls_window)
+        self.controls_menu = KeyControls.ControlsMenu(logger,screen_width,screen_height)
 
     ##################################################################################
     # Qt Events
@@ -82,15 +85,16 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             # self.logger.log(f'Key Pressed: {event.key()}')
             self.keys_pressed.append(event.key())
 
-        if event.key() == QtCore.Qt.Key_Escape:
+        key_map = self.controls_menu.key_map
+        if event.key() == key_map['Pause game']['code']:
             self.pause_menu.pause_signal.emit()
             self.pause_menu.show()
 
-        if event.key() == QtCore.Qt.Key_I:
+        if event.key() == key_map['Advance frame']['code']:
             if self.debug_mode:
                 self.pause_menu.pause_signal.emit()
 
-        if event.key() == QtCore.Qt.Key_N:
+        if event.key() == key_map['Next turn']['code']:
             self.next_turn()
     
     def keyReleaseEvent(self, event):
@@ -104,6 +108,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     ##################################################################################
     # Class Methods
     ##################################################################################
+    def show_controls_window(self):
+        self.controls_menu.show()
+    
     def next_turn(self):
         self.logger.log('Next turn...')
         self.tanks[self.selected_tank_idx].shots_fired = 0
@@ -128,49 +135,50 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
     def process_key_presses(self):
         gas_val = 0
+        key_map = self.controls_menu.key_map
         for key in self.keys_pressed:
             # D - move right
-            if key == QtCore.Qt.Key_D:
+            if key == key_map['Drive right']['code']:
                 self.drive_direction += 1.0 #rad
                 gas_val += 1.0
             
             # A - move left
-            elif key == QtCore.Qt.Key_A:
+            elif key == key_map['Drive left']['code']:
                 self.drive_direction += -1.0 #rad
                 gas_val += 1.0
             
             # W - move up
-            elif key == QtCore.Qt.Key_W:
+            elif key == key_map['Drive up']['code']:
                 self.barrel_direction += 1.0
                 gas_val += 1.0
             
             # S - move down
-            elif key == QtCore.Qt.Key_S:
+            elif key == key_map['Drive down']['code']:
                 self.barrel_direction += -1.0
                 gas_val += 1.0
             
             # up arrow - raise tank firing power
-            elif key == QtCore.Qt.Key_Up:
+            elif key == key_map['Increase cannon power']['code']:
                 self.tanks[self.selected_tank_idx].power_scale += 0.005
                 if self.tanks[self.selected_tank_idx].power_scale > 1.0:
                     self.tanks[self.selected_tank_idx].power_scale = 1.0
             
             # down arrow - lower tank firing power
-            elif key == QtCore.Qt.Key_Down:
+            elif key == key_map['Lower cannon power']['code']:
                 self.tanks[self.selected_tank_idx].power_scale -= 0.005
                 if self.tanks[self.selected_tank_idx].power_scale < .1:
                     self.tanks[self.selected_tank_idx].power_scale = .1
             
             # left arrow - rotate barrel counter clockwise
-            elif key == QtCore.Qt.Key_Left:
+            elif key == key_map['Rotate cannon counter clockwise']['code']:
                 self.tanks[self.selected_tank_idx].rotate_barrel(-1)
             
             # right arrow - rotate barrel clockwise
-            elif key == QtCore.Qt.Key_Right:
+            elif key == key_map['Rotate cannon clockwise']['code']:
                 self.tanks[self.selected_tank_idx].rotate_barrel(1)
             
             # F - fire shell
-            elif key == QtCore.Qt.Key_F:
+            elif key == key_map['Fire cannon']['code']:
                 shell = self.tanks[self.selected_tank_idx].fire_shell()
                 if shell:
                     self.shells.append(shell)
