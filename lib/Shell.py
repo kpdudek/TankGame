@@ -38,6 +38,7 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.launch_angle = launch_angle
         self.blast_radius = float(shell_data['blast_radius'])
         self.max_damage = float(shell_data['max_damage'])
+        self.capacity = shell_data['capacity']
 
         self.physics = Physics.Physics2D(self.mass,self.max_vel)
         self.physics.position = self.collision_geometry.sphere.pose.copy()

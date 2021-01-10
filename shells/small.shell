@@ -6,6 +6,7 @@
     "launch_force":150000,
     "blast_radius":50,
     "max_damage":25,
-    "visual_geometry":"simple.png",
-    "visual_offset":[0,-2]
+    "visual_geometry":"small.png",
+    "visual_offset":[0,-2],
+    "capacity":5
 }

@@ -65,15 +65,20 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
         self.canvas.pause_menu.main_menu_signal.connect(self.show_main_menu)
         self.canvas.pause_menu.save_game_signal.connect(self.save_game)
+
+        self.shell_files = self.main_menu.shell_files
+        self.save_data.update({'shell_files':self.shell_files})
         
         tank_colors = self.get_tank_colors()
         self.tank_count = self.main_menu.number_of_tanks_spinbox.value()
         self.save_data.update({'tank_count':self.tank_count})
+        self.starting_shell = self.main_menu.shell_type_combobox.currentText()
+        self.save_data.update({'starting_shell':self.starting_shell})
         selected_colors = []
         for tank_idx in range(0,self.tank_count):
             color = tank_colors.pop(random.randint(0,len(tank_colors)-1))
             selected_colors.append(color)
-            self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',str(tank_idx+1),color))
+            self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',self.starting_shell,self.shell_files,str(tank_idx+1),color))
         self.save_data.update({'tank_colors':selected_colors})
 
         self.map_file = self.main_menu.map_files_combobox.currentText()
@@ -127,12 +132,14 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.canvas.pause_menu.pause_signal.connect(self.toggle_pause_state)
         self.canvas.pause_menu.main_menu_signal.connect(self.show_main_menu)
         self.canvas.pause_menu.save_game_signal.connect(self.save_game)
-        
+
+        self.shell_files = self.save_data['shell_files']        
         self.tank_colors = self.save_data['tank_colors']
         self.tank_count = self.save_data['tank_count']
+        self.starting_shell = self.save_data['starting_shell']
         for tank_idx in range(0,self.tank_count):
             color = self.tank_colors[tank_idx]
-            self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',str(tank_idx+1),color))
+            self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',self.starting_shell,self.shell_files,str(tank_idx+1),color))
 
         self.map_file = self.save_data['map_file']
         self.canvas.load_map(self.map_file)

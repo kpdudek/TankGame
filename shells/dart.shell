@@ -1,0 +1,13 @@
+{
+    "name":"simple_shell",
+    "vertices":[[0,0],[0,-4],[4,-4],[4,4],[0,4]],
+    "mass":5,
+    "max_vel":500,
+    "launch_force":150000,
+    "blast_radius":1,
+    "max_damage":150,
+    "visual_geometry":"dart.png",
+    "visual_offset":[0,-4],
+    "visual_offset":[0,-2],
+    "capacity":1
+}

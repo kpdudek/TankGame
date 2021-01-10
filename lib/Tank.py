@@ -8,7 +8,7 @@ from lib import Utils, PaintUtils, Geometry, Physics, Shell
 class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
     turn_over_signal = QtCore.pyqtSignal()
 
-    def __init__(self,logger, debug_mode, tank_file, name, color):
+    def __init__(self,logger, debug_mode, tank_file, shell_file, shell_list, name, color):
         super().__init__()
         self.logger = logger
         self.debug_mode = debug_mode
@@ -16,7 +16,11 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
         self.collided_with = []
         self.prev_shot_time = -1.0
-        self.shot_limit = 5
+        self.shell_type = shell_file
+        self.shell_list = shell_list
+        self.shell_idx = self.shell_list.index(self.shell_type)
+        shell = Shell.Shell(self.logger,self.debug_mode,self,shell_file,f'{0}',numpy.zeros([2,1]),0.0)
+        self.shot_limit = shell.capacity 
         self.shots_fired = 0
         self.shots_left = self.shot_limit - self.shots_fired
         self.gas_limit = 1000.0
@@ -74,6 +78,17 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.c_double_p = ctypes.POINTER(ctypes.c_double)
         self.cc_fun = ctypes.CDLL(f'{self.lib_path}{self.cc_lib_path}') # Or full path to file
         self.cc_fun.polygon_is_collision.argtypes = [self.c_double_p,ctypes.c_int,ctypes.c_int,self.c_double_p,ctypes.c_int,ctypes.c_int] 
+
+    def switch_shell(self):
+        if self.shots_left != self.shot_limit:
+            return
+        self.shell_idx += 1
+        if self.shell_idx >= len(self.shell_list):
+            self.shell_idx = 0
+        self.shell_type = self.shell_list[self.shell_idx]
+        shell = Shell.Shell(self.logger,self.debug_mode,self,self.shell_type,f'{0}',numpy.zeros([2,1]),0.0)
+        self.shot_limit = shell.capacity 
+        self.shots_left = self.shot_limit - self.shots_fired
 
     def update_visual_geometry(self):
         self.visual_geometry = QtGui.QPolygonF()
@@ -190,7 +205,9 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             self.prev_shot_time = t
             self.shots_fired += 1
             self.shots_left = self.shot_limit - self.shots_fired
-            return Shell.Shell(self.logger,self.debug_mode,self,'simple.shell',f'{self.shots_fired}',starting_pose,self.barrel_angle)
+            shell = Shell.Shell(self.logger,self.debug_mode,self,self.shell_type,f'{self.shots_fired}',starting_pose,self.barrel_angle)
+            self.shot_limit = shell.capacity
+            return shell
         else:
             return None
 

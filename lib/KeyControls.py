@@ -57,6 +57,7 @@ class ControlsMenu(QtWidgets.QWidget,Utils.FilePaths):
             'Rotate cannon counter clockwise': {'text':'Right arrow','code':Qt.Key_Left,'row':None},
             'Rotate cannon clockwise': {'text':'Left arrow','code':Qt.Key_Right,'row':None},
             'Fire cannon': {'text':'F','code':Qt.Key_F,'row':None},
+            'Switch shell': {'text':'T','code':Qt.Key_T,'row':None},
             'Next turn': {'text':'N','code':Qt.Key_N,'row':None},
             'Advance frame': {'text':'I','code':Qt.Key_I,'row':None},
             'Pause game': {'text':'Esc','code':Qt.Key_Escape,'row':None}

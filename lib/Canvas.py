@@ -26,6 +26,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         # Game data
         self.tanks = []
         self.shells = []
+        self.shell_switched = False
         self.map = None
         self.collision_bodies = []
         self.selected_tank_idx = 0
@@ -101,7 +102,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         try:
             if not event.isAutoRepeat():
                 # self.logger.log(f'Key Released: {event.key()}')
+                key_map = self.controls_menu.key_map
                 self.keys_pressed.remove(event.key())
+                if event.key() == key_map['Switch shell']['code']:
+                    self.shell_switched = False
         except:
             pass
             
@@ -114,6 +118,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     def next_turn(self):
         self.logger.log('Next turn...')
         self.tanks[self.selected_tank_idx].shots_fired = 0
+        self.tanks[self.selected_tank_idx].shots_left = self.tanks[self.selected_tank_idx].shot_limit - self.tanks[self.selected_tank_idx].shots_fired
         self.selected_tank_idx += 1
         if (self.selected_tank_idx > len(self.tanks)-1) or (self.selected_tank_idx < 0):
             self.selected_tank_idx = 0
@@ -183,6 +188,12 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                 if shell:
                     self.shells.append(shell)
                     self.logger.log(f'Tank [{self.tanks[self.selected_tank_idx].name}] fired a [{shell.name}]')
+                
+            # T - Switch shell
+            elif key == key_map['Switch shell']['code']:
+                if not self.shell_switched:
+                    self.tanks[self.selected_tank_idx].switch_shell()
+                    self.shell_switched = True
 
         self.tanks[self.selected_tank_idx].gas_used += gas_val
         if self.tanks[self.selected_tank_idx].gas_used > self.tanks[self.selected_tank_idx].gas_limit:
@@ -244,9 +255,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     def update_canvas(self,fps_actual,fps_max):
         self.fps_label = "Current FPS: %.0f\nMax FPS: %.0f"%(fps_actual,fps_max)
         try:
-            self.aim_label = "Angle: %.2f\nPower: %.2f\nShots Left: %d\nGas Left: %.2f"%(
+            self.aim_label = "Angle: %.2f\nPower: %.2f\nShell Type: %s\nShots Left: %d\nGas Left: %.2f"%(
                     math.degrees(self.tanks[self.selected_tank_idx].barrel_angle),
                     self.tanks[self.selected_tank_idx].power_scale,
+                    self.tanks[self.selected_tank_idx].shell_type,
                     self.tanks[self.selected_tank_idx].shots_left,
                     self.tanks[self.selected_tank_idx].gas_left)
         except:
@@ -269,11 +281,11 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.painter.drawText(3,13,200,75,QtCore.Qt.TextWordWrap,self.fps_label)
 
         cp = self.tanks[self.selected_tank_idx].collision_geometry.sphere.pose
-        width = 100
-        height = 50
+        width = 200
+        height = 100
         offset = 40
         aim_rect = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])+offset),QtCore.QSize(width,height))
-        self.painter.drawText(aim_rect,QtCore.Qt.TextWordWrap,self.aim_label)
+        self.painter.drawText(aim_rect,QtCore.Qt.TextWordWrap|QtCore.Qt.AlignHCenter,self.aim_label)
 
         self.painter.end()
         self.repaint()

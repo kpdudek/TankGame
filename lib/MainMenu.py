@@ -51,8 +51,14 @@ class MainMenu(QtWidgets.QWidget,Utils.FilePaths):
             self.map_files_combobox.addItems(map_files)
 
     def list_shells(self):
-        shell_files = os.listdir(f'{self.shells_path}')
+        data = os.listdir(f'{self.shells_path}')
+        shell_files = []
+        for file_name in data:
+            if '.shell' in file_name:
+                shell_files.append(file_name)
+        
         self.logger.log(f'Shell files found: {shell_files}')
+        self.shell_files = shell_files
 
         if len(shell_files) == 0:
             self.shell_type_combobox.addItem('None')
