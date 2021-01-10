@@ -86,10 +86,11 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             self.pause_menu.pause_signal.emit()
             self.pause_menu.show()
 
-        if event.key() == QtCore.Qt.Key_N:
-            self.pause_menu.pause_signal.emit()
-
         if event.key() == QtCore.Qt.Key_I:
+            if self.debug_mode:
+                self.pause_menu.pause_signal.emit()
+
+        if event.key() == QtCore.Qt.Key_N:
             self.next_turn()
     
     def keyReleaseEvent(self, event):
@@ -99,10 +100,6 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                 self.keys_pressed.remove(event.key())
         except:
             pass
-
-    ##################################################################################
-    # Signal Connections
-    ##################################################################################
             
     ##################################################################################
     # Class Methods
@@ -130,22 +127,27 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             delta[0] += 400
 
     def process_key_presses(self):
+        gas_val = 0
         for key in self.keys_pressed:
             # D - move right
             if key == QtCore.Qt.Key_D:
                 self.drive_direction += 1.0 #rad
+                gas_val += 1.0
             
             # A - move left
             elif key == QtCore.Qt.Key_A:
                 self.drive_direction += -1.0 #rad
+                gas_val += 1.0
             
             # W - move up
             elif key == QtCore.Qt.Key_W:
                 self.barrel_direction += 1.0
+                gas_val += 1.0
             
             # S - move down
             elif key == QtCore.Qt.Key_S:
                 self.barrel_direction += -1.0
+                gas_val += 1.0
             
             # up arrow - raise tank firing power
             elif key == QtCore.Qt.Key_Up:
@@ -174,6 +176,11 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                     self.shells.append(shell)
                     self.logger.log(f'Tank [{self.tanks[self.selected_tank_idx].name}] fired a [{shell.name}]')
 
+        self.tanks[self.selected_tank_idx].gas_used += gas_val
+        if self.tanks[self.selected_tank_idx].gas_used > self.tanks[self.selected_tank_idx].gas_limit:
+            self.tanks[self.selected_tank_idx].gas_used = self.tanks[self.selected_tank_idx].gas_limit
+        self.tanks[self.selected_tank_idx].gas_left = self.tanks[self.selected_tank_idx].gas_limit - self.tanks[self.selected_tank_idx].gas_used
+
     def set_pixmap(self):
         width = self.frameGeometry().width()
         height = self.frameGeometry().height()
@@ -192,15 +199,18 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for idx in range(0,len(self.tanks)):
             tank = self.tanks[idx+idx_offset]
             if tank.health <= 0:
+                if self.selected_tank_idx > idx+idx_offset:
+                    self.selected_tank_idx -= 1
                 self.tanks.pop(idx+idx_offset)
                 idx_offset -= 1
             else:
                 forces = tank.gravity_force.copy()
                 if (idx+idx_offset) == self.selected_tank_idx:
-                    if self.drive_direction:
-                        forces[0] += self.drive_direction * tank.drive_force
-                    if self.barrel_direction:
-                        forces[1] += self.barrel_direction * tank.drive_force
+                    if self.tanks[self.selected_tank_idx].gas_left > 0:
+                        if self.drive_direction:
+                            forces[0] += self.drive_direction * tank.drive_force
+                        if self.barrel_direction:
+                            forces[1] += self.barrel_direction * tank.drive_force
                 tank.update_position(forces,delta_t,[self.map])
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
@@ -225,6 +235,14 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
     def update_canvas(self,fps_actual,fps_max):
         self.fps_label = "Current FPS: %.0f\nMax FPS: %.0f"%(fps_actual,fps_max)
+        try:
+            self.aim_label = "Angle: %.2f\nPower: %.2f\nShots Left: %d\nGas Left: %.2f"%(
+                    math.degrees(self.tanks[self.selected_tank_idx].barrel_angle),
+                    self.tanks[self.selected_tank_idx].power_scale,
+                    self.tanks[self.selected_tank_idx].shots_left,
+                    self.tanks[self.selected_tank_idx].gas_left)
+        except:
+            self.aim_label = ''
 
         self.painter = QtGui.QPainter(self.canvas.pixmap())
 
@@ -241,6 +259,13 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
         self.text_painter(self.painter)
         self.painter.drawText(3,13,200,75,QtCore.Qt.TextWordWrap,self.fps_label)
+
+        cp = self.tanks[self.selected_tank_idx].collision_geometry.sphere.pose
+        width = 100
+        height = 50
+        offset = 40
+        aim_rect = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])+offset),QtCore.QSize(width,height))
+        self.painter.drawText(aim_rect,QtCore.Qt.TextWordWrap,self.aim_label)
 
         self.painter.end()
         self.repaint()

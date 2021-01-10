@@ -13,19 +13,27 @@ class MainMenu(QtWidgets.QWidget,Utils.FilePaths):
         self.logger = logger
         uic.loadUi(f'{self.user_path}ui/welcome_screen.ui',self)
 
+        self.delete_game_button.clicked.connect(self.delete_save_file)
+
         self.list_save_games()
         self.list_maps()
         self.list_shells()
         self.list_tanks()
 
+    def delete_save_file(self):
+        file_name = self.save_files_combobox.currentText()
+        if file_name == '':
+            return
+        os.remove(f'{self.saves_path}{file_name}')
+        self.list_save_games()
+
     def list_save_games(self):
         try:
+            self.save_files_combobox.clear()
             save_files = os.listdir(f'{self.saves_path}')
             self.logger.log(f'Save files found: {save_files}')
 
-            if len(save_files) == 0:
-                self.save_files_combobox.addItem('None')
-            else:
+            if len(save_files) > 0:
                 self.save_files_combobox.addItems(save_files)
                 
         except FileNotFoundError:

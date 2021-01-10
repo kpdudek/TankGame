@@ -7,15 +7,26 @@ from PyQt5.QtCore import Qt
 class Colors():
     # Game Colors
     brown = '#996633'
+
     sky_blue = '#1BADDE'
     midnight_blue = '#051962'
+
     star_gold = '#F7D31E'
-    white = '#FFFFFF'
+
     forest_green = '#38690E'
-    gray = '#353535'
+    light_green = '#00FF00'
+
+    white = '#FFFFFF'
     light_gray = '#BDBDBD'
+    gray = '#353535'
     black = '#000000'
-    red = '#FF0000'
+
+    red = '#DF0101'
+    maroon = '#B40431'
+
+    def get_tank_colors(self):
+        tank_colors = [self.brown,self.midnight_blue,self.forest_green,self.white,self.gray,self.black,self.maroon]
+        return tank_colors
 
 
 class PaintBrushes():
@@ -54,6 +65,18 @@ class PaintBrushes():
 
         brush = QtGui.QBrush()
         brush.setColor(QColor(self.sky_blue))
+        brush.setStyle(Qt.SolidPattern)
+
+        painter.setPen(pen)
+        painter.setBrush(brush)
+
+    def healthbar_painter(self,painter):
+        pen = QtGui.QPen()
+        pen.setWidth(0)
+        pen.setColor(QColor(self.light_green))
+
+        brush = QtGui.QBrush()
+        brush.setColor(QColor(self.light_green))
         brush.setStyle(Qt.SolidPattern)
 
         painter.setPen(pen)

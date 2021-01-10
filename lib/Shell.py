@@ -27,8 +27,8 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.collision_geometry.from_shell_data(shell_data)
         self.collision_geometry.teleport(starting_pose)
 
-        self.visual_geometry = QtGui.QPolygonF()
-        self.update_visual_geometry()
+        self.visual_geometry = QtGui.QPixmap(f"{self.shells_path}{shell_data['visual_geometry']}")
+        self.visual_offset = shell_data['visual_offset']
 
         self.name = f"{shell_data['name']}_{name}"
         self.mass = float(shell_data['mass'])
@@ -52,16 +52,12 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.heartbeat_timer.timeout.connect(self.heartbeat)
         self.heartbeat_timer.start(1000 * 15)
 
-    def update_visual_geometry(self):
-        self.visual_geometry = QtGui.QPolygonF()
-        r,c = self.collision_geometry.vertices.shape
-        for idx in range(0,c):
-            point = QtCore.QPointF(self.collision_geometry.vertices[0,idx],self.collision_geometry.vertices[1,idx])
-            self.visual_geometry.append(point)
-
     def draw_shell(self,painter):
-        self.shell_painter(painter)
-        painter.drawPolygon(self.visual_geometry)
+        # self.shell_painter(painter)
+        x = float(self.collision_geometry.vertices[0,0]) + self.visual_offset[0]
+        y = float(self.collision_geometry.vertices[1,0]) + self.visual_offset[1]
+        pose = QtCore.QPoint(x,y)
+        painter.drawPixmap(pose,self.visual_geometry)
 
         if self.debug_mode:
             x = int(self.collision_geometry.sphere.pose[0])
@@ -114,7 +110,7 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
                         self.compute_blast_radius(collision_bodies)
                     self.collided = True
         
-        self.update_visual_geometry()
+        # self.update_visual_geometry()
 
     def heartbeat(self):
         if self.heartbeats > 2:

@@ -18,7 +18,10 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.prev_shot_time = -1.0
         self.shot_limit = 5
         self.shots_fired = 0
-        self.gas_limit = 500.0
+        self.shots_left = self.shot_limit - self.shots_fired
+        self.gas_limit = 1000.0
+        self.gas_used = 0.0
+        self.gas_left = self.gas_limit - self.gas_used
         self.xp = 0.0
         self.turn_over = False    
 
@@ -42,6 +45,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.upper_barrel_limit = math.radians(20.0)
         self.lower_barrel_limit = math.radians(-200.0)
         self.health = float(tank_data['health'])
+        self.max_health = float(tank_data['health'])
 
         self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_tank_data(tank_data,'vertices')
@@ -85,9 +89,29 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             self.visual_barrel.append(point)
 
     def draw_tank(self,painter):
+        self.text_painter(painter)
+        cp = self.collision_geometry.sphere.pose
+        width = 100
+        height = 15
+        offset = 60
+        name_box = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])-offset),QtCore.QSize(width,height))
+        painter.drawText(name_box,QtCore.Qt.TextWordWrap|QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter,self.name)
+
+        self.healthbar_painter(painter)
+        cp = self.collision_geometry.sphere.pose
+        width = 60 * (self.health/self.max_health)
+        height = 4
+        offset = 40
+        self.healthbar = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])-offset),QtCore.QSize(width,height))
+        painter.drawRoundedRect(self.healthbar,2,2)
+
         self.tank_painter(painter,self.color)
         painter.drawPolygon(self.visual_geometry)
         painter.drawPolygon(self.visual_barrel)
+        x = int(self.barrel_geometry.vertices[0,0].copy())
+        y = int(self.barrel_geometry.vertices[1,0].copy())
+        r = 9
+        painter.drawEllipse(x-r, y-(r/2), r*2, r*2)
 
         if self.debug_mode:
             x = int(self.collision_geometry.sphere.pose[0])
@@ -153,6 +177,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
                     self.barrel_tip -= offset
                     self.physics.velocity = numpy.zeros([2,1])
                     self.collided_with.append(body.name)
+                    offset = numpy.zeros([2,1])
         
         self.update_visual_geometry()
 
@@ -164,6 +189,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             starting_pose = self.barrel_tip
             self.prev_shot_time = t
             self.shots_fired += 1
+            self.shots_left = self.shot_limit - self.shots_fired
             return Shell.Shell(self.logger,self.debug_mode,self,'simple.shell',f'{self.shots_fired}',starting_pose,self.barrel_angle)
         else:
             return None

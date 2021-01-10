@@ -66,12 +66,12 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.canvas.pause_menu.main_menu_signal.connect(self.show_main_menu)
         self.canvas.pause_menu.save_game_signal.connect(self.save_game)
         
-        tank_colors = [self.forest_green,self.midnight_blue,self.star_gold]
+        tank_colors = self.get_tank_colors()
         self.tank_count = self.main_menu.number_of_tanks_spinbox.value()
         self.save_data.update({'tank_count':self.tank_count})
         selected_colors = []
         for tank_idx in range(0,self.tank_count):
-            color = tank_colors[random.randint(0,len(tank_colors)-1)]
+            color = tank_colors.pop(random.randint(0,len(tank_colors)-1))
             selected_colors.append(color)
             self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',str(tank_idx+1),color))
         self.save_data.update({'tank_colors':selected_colors})
@@ -92,6 +92,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         if self.debug_mode:
             self.logger.log(f'Starting game in debug mode! Use the "n" key to step through frames')
 
+        self.save_game()
         self.prev_loop_tic = time.time()
         self.game_timer.start(1000/self.fps)
         self.is_paused = False
@@ -107,6 +108,8 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
 
     def load_game(self):
         self.save_file_name = self.main_menu.save_files_combobox.currentText()
+        if self.save_file_name == '':
+            return
         self.logger.log(f'Loading game from save file: {self.save_file_name}')
 
         fp = open(f'{self.saves_path}{self.save_file_name}','r')
@@ -158,6 +161,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.close()
 
     def show_main_menu(self):
+        self.save_game()
         self.canvas.setFocus(False)
         self.setFocus(True)
         
