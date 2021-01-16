@@ -36,11 +36,12 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.gravity_force = numpy.array([[0],[self.mass * Geometry.m_to_px(9.8)]])
         self.launch_force = float(shell_data['launch_force'])
         self.launch_angle = launch_angle
+        self.angle = launch_angle
         self.blast_radius = float(shell_data['blast_radius'])
         self.max_damage = float(shell_data['max_damage'])
         self.capacity = shell_data['capacity']
 
-        self.physics = Physics.Physics2D(self.mass,self.max_vel)
+        self.physics = Physics.Physics2D(self.mass,self.max_vel,drag=False)
         self.physics.position = self.collision_geometry.sphere.pose.copy()
 
         # C library for collision checking
@@ -78,6 +79,17 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
             if body.name != 'ground':
                 if Geometry.sphere_is_collision(blast_radius,body.collision_geometry):
                     body.hit(self,self.parent,blast=True)
+
+    def rotate(self,angle,point=None):
+        self.angle += angle
+        
+        sign = numpy.sign(angle)
+        self.collision_geometry.rotate(sign,angle,point=point)
+        self.collision_geometry.set_bounding_sphere()
+        self.physics.position = self.collision_geometry.sphere.pose.copy()
+
+        transform = QtGui.QTransform().rotate(math.degrees(angle))
+        self.visual_geometry = self.visual_geometry.transformed(transform, QtCore.Qt.SmoothTransformation)
 
     def update_position(self,forces,delta_t,collision_bodies):
         if self.collided:

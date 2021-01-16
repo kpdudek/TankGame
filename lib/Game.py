@@ -70,15 +70,23 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.save_data.update({'shell_files':self.shell_files})
         
         tank_colors = self.get_tank_colors()
-        self.tank_count = self.main_menu.number_of_tanks_spinbox.value()
-        self.save_data.update({'tank_count':self.tank_count})
+        self.player_count = self.main_menu.player_count_spinbox.value()
+        self.save_data.update({'player_count':self.player_count})
         self.starting_shell = self.main_menu.shell_type_combobox.currentText()
         self.save_data.update({'starting_shell':self.starting_shell})
         selected_colors = []
-        for tank_idx in range(0,self.tank_count):
+        
+        for tank_idx in range(0,self.player_count):
             color = tank_colors.pop(random.randint(0,len(tank_colors)-1))
             selected_colors.append(color)
             self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',self.starting_shell,self.shell_files,str(tank_idx+1),color))
+
+        self.tank_count = self.main_menu.number_of_tanks_spinbox.value()
+        self.save_data.update({'tank_count':self.tank_count})
+        for tank_idx in range(0,self.tank_count):
+            color = tank_colors.pop(random.randint(0,len(tank_colors)-1))
+            selected_colors.append(color)
+            self.canvas.tanks.append(Tank.TankAI(self.logger,self.debug_mode,'m1_abrams.tank',self.starting_shell,self.shell_files,str(tank_idx+1),color))
         self.save_data.update({'tank_colors':selected_colors})
 
         self.map_file = self.main_menu.map_files_combobox.currentText()

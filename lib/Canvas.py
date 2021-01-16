@@ -3,7 +3,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import random, sys, os, math, time, numpy, json
 
-from lib import Utils, PaintUtils, Geometry, PauseMenu, Map, KeyControls
+from lib import Utils, PaintUtils, Geometry, PauseMenu, Map, KeyControls, Tank
 
 class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
 
@@ -196,7 +196,6 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                 shell = self.tanks[self.selected_tank_idx].fire_shell()
                 if shell:
                     self.shells.append(shell)
-                    self.logger.log(f'Tank [{self.tanks[self.selected_tank_idx].name}] fired a [{shell.name}]')
                 
             # switch shell
             elif key == key_map['Switch shell']['code']:
@@ -233,15 +232,27 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                 idx_offset -= 1
             else:
                 forces = tank.gravity_force.copy()
+                # forces[1] = 0.0
                 if (idx+idx_offset) == self.selected_tank_idx:
-                    if self.tanks[self.selected_tank_idx].gas_left > 0:
-                        if self.drive_direction:
-                            forces[0] += self.drive_direction * tank.drive_force
-                        if self.barrel_direction:
-                            forces[1] += self.barrel_direction * tank.drive_force
-                    tank.update_position(forces,delta_t,self.rotation_direction,[self.map])
+                    if type(tank) == Tank.TankAI:
+                        target_idx = idx + 1
+                        if target_idx >= len(self.tanks):
+                            target_idx = 0
+                        target = self.tanks[target_idx].collision_geometry.sphere.pose.copy()
+                        shell = tank.compute_move(forces,delta_t,[self.map],target)
+                        if shell:
+                            self.shells.append(shell)
+                
+                    elif type(tank) == Tank.Tank:
+                        if self.tanks[self.selected_tank_idx].gas_left > 0:
+                            if self.drive_direction:
+                                forces[0] += self.drive_direction * tank.drive_force
+                            if self.barrel_direction:
+                                forces[1] += self.barrel_direction * tank.drive_force
+                        tank.update_position(forces,delta_t,self.rotation_direction,[self.map])
                 else:
                     tank.update_position(forces,delta_t,0.0,[self.map])
+                
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
         self.rotation_direction= 0.0
@@ -253,9 +264,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             if not shell.done:
                 if not shell.launched:
                     scale = self.tanks[self.selected_tank_idx].power_scale
-                    x = scale*shell.launch_force*math.cos(shell.launch_angle)
-                    y = scale*shell.launch_force*math.sin(shell.launch_angle)
-                    forces = numpy.array([[x],[y]])
+                    x = scale*shell.max_vel*math.cos(shell.launch_angle)
+                    y = scale*shell.max_vel*math.sin(shell.launch_angle)
+                    forces = shell.gravity_force.copy()
+                    shell.physics.velocity = numpy.array([[x],[y]])
                     shell.launched = True
                 else:
                     forces = shell.gravity_force.copy()
@@ -267,12 +279,19 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     def update_canvas(self,fps_actual,fps_max):
         self.fps_label = "Current FPS: %.0f\nMax FPS: %.0f"%(fps_actual,fps_max)
         try:
-            self.aim_label = "Angle: %.2f\nPower: %.2f\nShell Type: %s\nShots Left: %d\nGas Left: %.2f"%(
-                    math.degrees(self.tanks[self.selected_tank_idx].barrel_angle),
-                    self.tanks[self.selected_tank_idx].power_scale,
-                    self.tanks[self.selected_tank_idx].shell_type,
-                    self.tanks[self.selected_tank_idx].shots_left,
-                    self.tanks[self.selected_tank_idx].gas_left)
+            tank = self.tanks[self.selected_tank_idx]
+            self.aim_label = "Barrel Angle: %.2f\nTank Angle: %.2f\nPower: %.2f\nShell Type: %s\nShots Left: %d\nGas Left: %.2f"%(
+                    math.degrees(tank.barrel_angle),
+                    math.degrees(tank.angle),
+                    tank.power_scale,
+                    tank.shell_type,
+                    tank.shots_left,
+                    tank.gas_left)
+
+            tank_type = str(type(tank)) # results in <'class lib.Tank.Tank'> or <'class lib.Tank.TankAI'>
+            tank_type = tank_type.strip("<>' ") # isolate file path by stripping unwanted characters
+            tank_type = tank_type.split(".")[-1] # split by the path delimiter '.' in order to get class type
+            self.aim_label = f'{tank_type}\n{self.aim_label}'
         except:
             self.aim_label = ''
 

@@ -5,6 +5,7 @@ import random, sys, os, math, time, numpy, json, ctypes
 
 from lib import Utils, PaintUtils, Geometry, Physics, Shell
 
+
 class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
     turn_over_signal = QtCore.pyqtSignal()
 
@@ -23,7 +24,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.shot_limit = shell.capacity 
         self.shots_fired = 0
         self.shots_left = self.shot_limit - self.shots_fired
-        self.gas_limit = 1000.0
+        self.gas_limit = 500.0
         self.gas_used = 0.0
         self.gas_left = self.gas_limit - self.gas_used
         self.xp = 0.0
@@ -171,16 +172,14 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.collision_geometry.rotate(sign,step_size,point=point)
         self.collision_geometry.set_bounding_sphere()
         self.physics.position = self.collision_geometry.sphere.pose.copy()
+        self.collision_geometry.origin = self.collision_geometry.vertices[:,0].reshape(2,1).copy()
 
         prev_offset = self.barrel_offset.copy()
         tmp_offset = Geometry.rotate_2d(prev_offset,sign*step_size)
         self.barrel_offset = tmp_offset
         self.barrel_geometry.teleport(self.collision_geometry.origin + self.barrel_offset)
 
-        self.barrel_geometry.rotate(sign,step_size,point=point)
-        x = self.barrel_length * math.cos(self.barrel_angle)
-        y = self.barrel_length * math.sin(self.barrel_angle)
-        self.barrel_tip = self.collision_geometry.origin + self.barrel_offset + numpy.array([[x],[y]])
+        self.rotate_barrel(sign)
 
     def update_position(self,forces,delta_t,angle,collision_bodies):
         old_pose = self.physics.position.copy()
@@ -227,8 +226,13 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             self.prev_shot_time = t
             self.shots_fired += 1
             self.shots_left = self.shot_limit - self.shots_fired
-            shell = Shell.Shell(self.logger,self.debug_mode,self,self.shell_type,f'{self.shots_fired}',starting_pose,self.barrel_angle)
+
+            launch_angle = self.barrel_angle+self.angle
+            shell = Shell.Shell(self.logger,self.debug_mode,self,self.shell_type,f'{self.shots_fired}',starting_pose,launch_angle)
+            shell.rotate(launch_angle,point=shell.collision_geometry.sphere.pose.copy())
+            
             self.shot_limit = shell.capacity
+            self.logger.log(f'Tank [{self.name}] fired a [{shell.name}]')
             return shell
         else:
             return None
@@ -243,3 +247,70 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             parent.xp += 5.0
             self.health -= shell.max_damage
         self.logger.log(f'{self.name} health is now: {self.health}')
+
+class TankAI(Tank):
+    def __init__(self,logger, debug_mode, tank_file, shell_file, shell_list, name, color):
+        super().__init__(logger, debug_mode, tank_file, shell_file, shell_list, name, color)
+        
+        self.barrel_at_setpoint = False
+    
+    def set_power(self):
+        sols = []
+        launch_angle = self.barrel_angle+self.angle
+        starting_pose = self.barrel_tip
+        shell = Shell.Shell(self.logger,self.debug_mode,self,self.shell_type,f'{self.shots_fired}',starting_pose,launch_angle)
+
+        x_goal = float(self.target[0])
+        y_goal = float(self.target[1])
+        grav = Geometry.m_to_px(9.8)
+        for scale in numpy.linspace(.1,1,num=100):
+            vx = scale*shell.max_vel*math.cos(launch_angle)
+            vy = scale*shell.max_vel*math.sin(launch_angle)
+
+            # Compute time to travel x distance at this starting velocity and angle
+            delta_x = x_goal - float(self.barrel_tip[0])
+            tx = delta_x/vx
+
+            # Compute time to travel y distance at this starting velocity and angle
+            delta_y_peak = (-1.*math.pow(vy,2)) / (2.*grav)
+            t_up = -1.*vy / grav
+            
+            y_max = self.barrel_tip[1] + delta_y_peak
+            delta_y_goal = abs(y_goal - y_max)
+            v_max = math.sqrt(2.*grav*delta_y_goal)
+            t_down = v_max / grav
+            ty = t_up + t_down
+
+            # The times should be equal to satisfy this equation
+            if abs(tx-ty) < .3:
+                sols.append(scale)
+        if len(sols) > 0:
+            self.power_scale = sols[0]
+        # self.logger.log(f'Sols found: {sols}')
+
+    def set_barrel_angle(self):
+        if float(self.target[0]) < float(self.collision_geometry.sphere.pose[0]):
+            theta = -math.radians(120)
+        else:
+            theta = -math.radians(60)
+
+        delta_angle = theta - self.barrel_angle
+        if abs(delta_angle) > 0.01:
+            sign = 1 * numpy.sign(delta_angle)
+            self.rotate_barrel(sign)
+            self.barrel_at_setpoint = False
+        else:
+            self.barrel_at_setpoint = True
+
+    def compute_move(self,forces,delta_t,collision_bodies,target):
+        shell = None
+
+        self.target = target
+        self.set_barrel_angle()
+        if self.barrel_at_setpoint:
+            self.set_power()
+            shell = self.fire_shell()
+            
+        self.update_position(forces,delta_t,0.0,collision_bodies)
+        
+        return shell

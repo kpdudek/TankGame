@@ -14,11 +14,21 @@ class MainMenu(QtWidgets.QWidget,Utils.FilePaths):
         uic.loadUi(f'{self.user_path}ui/welcome_screen.ui',self)
 
         self.delete_game_button.clicked.connect(self.delete_save_file)
+        self.player_count_spinbox.valueChanged.connect(self.update_player_tank_count)
+        self.number_of_tanks_spinbox.valueChanged.connect(self.update_player_tank_count)
 
         self.list_save_games()
         self.list_maps()
         self.list_shells()
         self.list_tanks()
+
+    def update_player_tank_count(self):
+        player_val = self.player_count_spinbox.value()
+        tank_val = self.number_of_tanks_spinbox.value()
+        
+        if player_val > tank_val:
+            self.number_of_tanks_spinbox.setValue(player_val)
+        
     
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:

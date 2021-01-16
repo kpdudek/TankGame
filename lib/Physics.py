@@ -8,7 +8,7 @@ from lib import Utils, PaintUtils, Geometry
 class Physics2D(QtWidgets.QWidget,Utils.FilePaths):
     time_scaling = 1.0
 
-    def __init__(self,mass,max_vel):
+    def __init__(self,mass,max_vel,drag=True):
         super().__init__()
         self.mass = mass
         self.max_vel = max_vel
@@ -20,6 +20,7 @@ class Physics2D(QtWidgets.QWidget,Utils.FilePaths):
         self.drag_force = numpy.array([ [0.] , [0.] ])
         self.grav_accel = numpy.array([ [0.] , [9.8] ])
 
+        self.drag = drag
         self.c_d = 0.3
         self.prev_time = time.time()
 
@@ -27,7 +28,8 @@ class Physics2D(QtWidgets.QWidget,Utils.FilePaths):
 
     def accelerate(self,force,time):
         self.force = force
-        self.compute_drag()
+        if self.drag:
+            self.compute_drag()
 
         self.acceleration = force / self.mass
         self.velocity += self.acceleration * time

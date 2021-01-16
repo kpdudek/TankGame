@@ -57,6 +57,12 @@ def edge_angle(ang_type,*argv):
         vertex0 = argv[0]
         vertex1 = argv[1]
         vertex2 = argv[2]
+
+        vertex1[0] = vertex1[0] - vertex0[0]
+        vertex1[1] = vertex1[1] - vertex0[1]
+
+        vertex2[0] = vertex2[0] - vertex0[0]
+        vertex2[1] = vertex2[1] - vertex0[1]
     else:
         log('Edge angle type not recognized!',color='r')
         return None
