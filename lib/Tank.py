@@ -114,7 +114,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         height = 30
         offset = 70
         name_box = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])-offset),QtCore.QSize(width,height))
-        # tank_label = f"{self.xp}\n{self.name}"
         tank_label = f"{self.name}"
         painter.drawText(name_box,QtCore.Qt.TextWordWrap|QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop,tank_label)
 
@@ -126,7 +125,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         height = 4
         offset = 40
         self.healthbar = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])-offset),QtCore.QSize(width,height))
-        painter.drawRoundedRect(self.healthbar,2,2)
+        painter.drawRoundedRect(self.healthbar,1,1)
 
         self.tank_painter(painter,self.color)
         painter.drawPolygon(self.visual_geometry)
@@ -270,7 +269,7 @@ class TankAI(Tank):
         x_goal = float(self.target[0])
         y_goal = float(self.target[1])
         grav = Geometry.m_to_px(9.8)
-        for scale in numpy.linspace(.1,1,num=100):
+        for scale in numpy.linspace(.1,1,num=50):
             vx = scale*shell.max_vel*math.cos(launch_angle)
             vy = scale*shell.max_vel*math.sin(launch_angle)
 

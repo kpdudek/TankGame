@@ -123,7 +123,11 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.selected_tank_idx += 1
         if (self.selected_tank_idx > len(self.tanks)-1) or (self.selected_tank_idx < 0):
             self.selected_tank_idx = 0
-    
+        while not self.tanks[self.selected_tank_idx].alive:
+            self.selected_tank_idx += 1
+            if (self.selected_tank_idx > len(self.tanks)-1) or (self.selected_tank_idx < 0):
+                self.selected_tank_idx = 0
+
     def load_map(self,map_file):
         self.map = Map.Map(self.logger,self.debug_mode)
 
@@ -140,6 +144,8 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             delta[0] += 400
 
     def process_key_presses(self):
+        if type(self.tanks[self.selected_tank_idx]) == Tank.TankAI:
+            return
         gas_val = 0
         key_map = self.controls_menu.key_map
         for key in self.keys_pressed:
@@ -256,7 +262,6 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                     tank.update_position(forces,delta_t,0.0,[self.map])
             else:
                 tank.alive = False
-                # tank.update_position(forces,delta_t,0.0,[self.map])
                 
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
