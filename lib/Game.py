@@ -36,7 +36,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.setGeometry(self.welcome_offset_x, self.welcome_offset_y, self.welcome_width, self.welcome_height) 
 
         # Set main widget as main windows central widget
-        self.main_menu = MainMenu.MainMenu(logger)
+        self.main_menu = MainMenu.MainMenu(logger,self.screen_width,self.screen_height)
         self.main_menu.start_game_button.clicked.connect(self.start_game)
         self.main_menu.load_game_button.clicked.connect(self.load_game)
         if self.debug_mode:
@@ -188,7 +188,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         except:
             pass
 
-        self.main_menu = MainMenu.MainMenu(self.logger)
+        self.main_menu = MainMenu.MainMenu(self.logger,self.screen_width,self.screen_height)
         self.main_menu.start_game_button.clicked.connect(self.start_game)
         self.main_menu.load_game_button.clicked.connect(self.load_game)
         

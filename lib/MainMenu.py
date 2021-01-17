@@ -3,24 +3,32 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import random, sys, os, math, time, numpy
 
-from lib import Utils, PaintUtils, Game
+from lib import Utils, PaintUtils, Game, KeyControls
 
 
 class MainMenu(QtWidgets.QWidget,Utils.FilePaths):
 
-    def __init__(self,logger):
+    def __init__(self,logger,screen_width,screen_height):
         super().__init__()
         self.logger = logger
+        self.screen_width = screen_width
+        self.screen_height = screen_height
         uic.loadUi(f'{self.user_path}ui/welcome_screen.ui',self)
 
         self.delete_game_button.clicked.connect(self.delete_save_file)
         self.player_count_spinbox.valueChanged.connect(self.update_player_tank_count)
         self.number_of_tanks_spinbox.valueChanged.connect(self.update_player_tank_count)
 
+        self.control_window = KeyControls.ControlsMenu(self.logger,self.screen_width,self.screen_height)
+        self.keyboard_controls_button.clicked.connect(self.show_controls_window)
+
         self.list_save_games()
         self.list_maps()
         self.list_shells()
         self.list_tanks()
+
+    def show_controls_window(self):
+        self.control_window.show()
 
     def update_player_tank_count(self):
         player_val = self.player_count_spinbox.value()
