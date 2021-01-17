@@ -76,17 +76,20 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
         self.save_data.update({'starting_shell':self.starting_shell})
         selected_colors = []
         
+        name_idx = 0
         for tank_idx in range(0,self.player_count):
             color = tank_colors.pop(random.randint(0,len(tank_colors)-1))
             selected_colors.append(color)
-            self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',self.starting_shell,self.shell_files,str(tank_idx+1),color))
+            self.canvas.tanks.append(Tank.Tank(self.logger,self.debug_mode,'m1_abrams.tank',self.starting_shell,self.shell_files,str(name_idx),color))
+            name_idx += 1
 
         self.tank_count = self.main_menu.number_of_tanks_spinbox.value()
         self.save_data.update({'tank_count':self.tank_count})
         for tank_idx in range(0,self.tank_count):
             color = tank_colors.pop(random.randint(0,len(tank_colors)-1))
             selected_colors.append(color)
-            self.canvas.tanks.append(Tank.TankAI(self.logger,self.debug_mode,'m1_abrams.tank',self.starting_shell,self.shell_files,str(tank_idx+1),color))
+            self.canvas.tanks.append(Tank.TankAI(self.logger,self.debug_mode,'m1_abrams.tank',self.starting_shell,self.shell_files,str(name_idx),color))
+            name_idx += 1
         self.save_data.update({'tank_colors':selected_colors})
 
         self.map_file = self.main_menu.map_files_combobox.currentText()
@@ -212,7 +215,12 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
                 self.canvas.setEnabled(False)
 
     def game_loop(self):
-        if len(self.canvas.tanks) > 1:
+        alive_count = 0
+        for tank in self.canvas.tanks:
+            if tank.alive:
+                alive_count += 1
+        
+        if alive_count > 1:
             # Capture loop start time
             tic = time.time()
             loop_time = tic - self.prev_loop_tic
@@ -240,8 +248,13 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
             self.loop_count += 1
             self.prev_loop_tic = tic
         else:
-            winning_tank = f'{self.canvas.tanks[0].name} won!'
-            self.game_over.winning_tank_label.setText(winning_tank)
+            for count,tank in enumerate(self.canvas.tanks):
+                if tank.alive:
+                    winning_tank = tank.name
+                    break
+            
+            winning_tank_label = f'{winning_tank} won!'
+            self.game_over.winning_tank_label.setText(winning_tank_label)
             self.game_over.show()
             self.game_timer.stop()
             

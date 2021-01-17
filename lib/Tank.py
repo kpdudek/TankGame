@@ -15,6 +15,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.debug_mode = debug_mode
         self.tank_file = tank_file
 
+        self.alive = True
         self.collided_with = []
         self.prev_shot_time = -1.0
         self.shell_type = shell_file
@@ -110,14 +111,18 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.text_painter(painter)
         cp = self.collision_geometry.sphere.pose
         width = 100
-        height = 15
-        offset = 60
+        height = 30
+        offset = 70
         name_box = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])-offset),QtCore.QSize(width,height))
-        painter.drawText(name_box,QtCore.Qt.TextWordWrap|QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter,self.name)
+        # tank_label = f"{self.xp}\n{self.name}"
+        tank_label = f"{self.name}"
+        painter.drawText(name_box,QtCore.Qt.TextWordWrap|QtCore.Qt.AlignHCenter|QtCore.Qt.AlignTop,tank_label)
 
         self.healthbar_painter(painter)
         cp = self.collision_geometry.sphere.pose
         width = 60 * (self.health/self.max_health)
+        if width < 0.0:
+            width = 0.0
         height = 4
         offset = 40
         self.healthbar = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])-offset),QtCore.QSize(width,height))
@@ -229,7 +234,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 
             launch_angle = self.barrel_angle+self.angle
             shell = Shell.Shell(self.logger,self.debug_mode,self,self.shell_type,f'{self.shots_fired}',starting_pose,launch_angle)
-            shell.rotate(launch_angle,point=shell.collision_geometry.sphere.pose.copy())
             
             self.shot_limit = shell.capacity
             self.logger.log(f'Tank [{self.name}] fired a [{shell.name}]')
@@ -240,12 +244,15 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
     def hit(self,shell,parent,blast=False):
         if blast:
             self.logger.log(f'{self.name} was hit by a {shell.name} blast radius fired by {parent.name}')
-            parent.xp += 5.0
+            parent.xp += shell.max_damage * 0.5
             self.health -= shell.max_damage * 0.5
         else:
             self.logger.log(f'{self.name} was hit by a {shell.name} fired by {parent.name}')
-            parent.xp += 5.0
+            parent.xp += shell.max_damage
             self.health -= shell.max_damage
+
+        if self.health < 0.0:
+            self.health = 0.0
         self.logger.log(f'{self.name} health is now: {self.health}')
 
 class TankAI(Tank):

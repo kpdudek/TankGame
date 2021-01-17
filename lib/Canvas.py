@@ -224,20 +224,22 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         # Update tanks movement
         idx_offset = 0
         for idx in range(0,len(self.tanks)):
-            tank = self.tanks[idx+idx_offset]
-            if tank.health <= 0:
-                if self.selected_tank_idx > idx+idx_offset:
-                    self.selected_tank_idx -= 1
-                self.tanks.pop(idx+idx_offset)
-                idx_offset -= 1
-            else:
+            tank = self.tanks[idx]
+            if tank.health > 0:
                 forces = tank.gravity_force.copy()
                 # forces[1] = 0.0
-                if (idx+idx_offset) == self.selected_tank_idx:
+                if idx == self.selected_tank_idx:
                     if type(tank) == Tank.TankAI:
                         target_idx = idx + 1
                         if target_idx >= len(self.tanks):
                             target_idx = 0
+                        is_alive = self.tanks[target_idx].alive
+                        while not is_alive:
+                            target_idx = target_idx + 1
+                            if target_idx >= len(self.tanks):
+                                target_idx = 0
+                            is_alive = self.tanks[target_idx].alive
+
                         target = self.tanks[target_idx].collision_geometry.sphere.pose.copy()
                         shell = tank.compute_move(forces,delta_t,[self.map],target)
                         if shell:
@@ -252,6 +254,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                         tank.update_position(forces,delta_t,self.rotation_direction,[self.map])
                 else:
                     tank.update_position(forces,delta_t,0.0,[self.map])
+            else:
+                tank.alive = False
+                # tank.update_position(forces,delta_t,0.0,[self.map])
                 
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
@@ -295,6 +300,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         except:
             self.aim_label = ''
 
+        self.xp_label = 'Game Standings:\n'
+        for tank in self.tanks:
+            self.xp_label += f"{tank.name}: {tank.xp}\n"
+
         self.painter = QtGui.QPainter(self.canvas.pixmap())
 
         self.background_painter(self.painter)
@@ -303,7 +312,8 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.map.draw_map(self.painter)
 
         for tank in self.tanks:
-            tank.draw_tank(self.painter)
+            if tank.alive:
+                tank.draw_tank(self.painter)
 
         for shell in self.shells:
             shell.draw_shell(self.painter)
@@ -311,10 +321,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.text_painter(self.painter)
         self.painter.drawText(3,13,200,75,QtCore.Qt.TextWordWrap,self.fps_label)
 
+        self.painter.drawText(self.screen_width-220,10,200,100,QtCore.Qt.TextWordWrap|QtCore.Qt.AlignRight,self.xp_label)
+
         cp = self.tanks[self.selected_tank_idx].collision_geometry.sphere.pose
-        width = 200
-        height = 100
-        offset = 40
+        width, height, offset = 200, 100, 40
         aim_rect = QtCore.QRect(QtCore.QPoint(int(cp[0])-(width/2),int(cp[1])+offset),QtCore.QSize(width,height))
         self.painter.drawText(aim_rect,QtCore.Qt.TextWordWrap|QtCore.Qt.AlignHCenter,self.aim_label)
 

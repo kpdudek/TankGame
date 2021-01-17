@@ -27,9 +27,11 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
         self.collision_geometry.from_shell_data(shell_data)
         self.collision_geometry.teleport(starting_pose)
 
-        self.visual_geometry = QtGui.QPixmap(f"{self.shells_path}{shell_data['visual_geometry']}")
+        self.visual_geometry_file = QtGui.QPixmap(f"{self.shells_path}{shell_data['visual_geometry']}")
+        self.visual_geometry = self.visual_geometry_file
         self.visual_offset = shell_data['visual_offset']
 
+        self.angle = 0.0
         self.name = f"{shell_data['name']}_{name}"
         self.mass = float(shell_data['mass'])
         self.max_vel = float(shell_data['max_vel'])
@@ -82,13 +84,13 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
 
     def rotate(self,angle,point=None):
         self.angle += angle
-        
         sign = numpy.sign(angle)
         self.collision_geometry.rotate(sign,angle,point=point)
         self.collision_geometry.set_bounding_sphere()
         self.physics.position = self.collision_geometry.sphere.pose.copy()
 
-        transform = QtGui.QTransform().rotate(math.degrees(angle))
+        self.visual_geometry = QtGui.QPixmap(self.visual_geometry_file)
+        transform = QtGui.QTransform().rotate(math.degrees(self.angle))
         self.visual_geometry = self.visual_geometry.transformed(transform, QtCore.Qt.SmoothTransformation)
 
     def update_position(self,forces,delta_t,collision_bodies):
@@ -98,7 +100,14 @@ class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Paint
             return
         
         old_pose = self.physics.position.copy()
+        old_vel = self.physics.velocity.copy()
+
         offset = self.physics.accelerate(forces,delta_t)
+        theta_0 = math.atan(old_vel[1]/old_vel[0])
+        theta_1 = math.atan(self.physics.velocity[1]/self.physics.velocity[0])
+        theta = theta_1 - theta_0
+        self.rotate(theta,point=self.collision_geometry.sphere.pose.copy())
+
         self.collision_geometry.translate(offset)
         for body in collision_bodies:            
             data = self.collision_geometry.vertices
