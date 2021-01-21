@@ -231,6 +231,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         idx_offset = 0
         for idx in range(0,len(self.tanks)):
             tank = self.tanks[idx]
+            ground_angle = self.map.get_segment_angle(tank.collision_geometry.sphere.pose)
+            if not ground_angle:
+                ground_angle = tank.angle
+            # print(ground_angle)
             if tank.health > 0:
                 forces = tank.gravity_force.copy()
                 # forces[1] = 0.0
@@ -247,7 +251,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                             is_alive = self.tanks[target_idx].alive
 
                         target = self.tanks[target_idx].collision_geometry.sphere.pose.copy()
-                        shell = tank.compute_move(forces,delta_t,[self.map],target)
+                        shell = tank.compute_move(forces,delta_t,ground_angle,[self.map],target)
                         if shell:
                             self.shells.append(shell)
                 
@@ -257,9 +261,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                                 forces[0] += self.drive_direction * tank.drive_force
                             if self.barrel_direction:
                                 forces[1] += self.barrel_direction * tank.drive_force
-                        tank.update_position(forces,delta_t,self.rotation_direction,[self.map])
+                        tank.update_position(forces,delta_t,ground_angle,[self.map])
                 else:
-                    tank.update_position(forces,delta_t,0.0,[self.map])
+                    tank.update_position(forces,delta_t,ground_angle,[self.map])
             else:
                 tank.alive = False
                 

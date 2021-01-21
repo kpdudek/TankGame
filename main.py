@@ -9,7 +9,7 @@ def main(logger):
     file_paths = Utils.FilePaths()
     assert(file_paths.cc_lib_path in os.listdir('./lib/')),"cc_lib.so/.dll doesn't exist! Be sure to compile collision_check.c as cc_lib.so/.dll!"
 
-    fps = 60.0
+    fps = 100.0
     palette = PaintUtils.DarkColors().palette
 
     app = QtWidgets.QApplication(sys.argv)

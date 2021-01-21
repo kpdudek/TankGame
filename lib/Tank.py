@@ -25,7 +25,7 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.shot_limit = shell.capacity 
         self.shots_fired = 0
         self.shots_left = self.shot_limit - self.shots_fired
-        self.gas_limit = 500.0
+        self.gas_limit = 1000.0
         self.gas_used = 0.0
         self.gas_left = self.gas_limit - self.gas_used
         self.xp = 0.0
@@ -188,7 +188,10 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
     def update_position(self,forces,delta_t,angle,collision_bodies):
         old_pose = self.physics.position.copy()
 
-        self.rotate(angle,point=self.collision_geometry.sphere.pose)
+        rot_dir = 1.0*numpy.sign(angle - self.angle)
+        self.rotate(rot_dir,point=self.collision_geometry.sphere.pose) 
+
+        # self.rotate(angle,point=self.collision_geometry.sphere.pose)
         offset = self.physics.accelerate(forces,delta_t)
         self.collision_geometry.translate(offset)
         self.barrel_geometry.translate(offset)
@@ -210,7 +213,8 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
             if Geometry.sphere_is_collision(self.collision_geometry,body.collision_geometry):
                 res = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
                 if res:
-                    self.rotate(-1.0 * angle,point=self.collision_geometry.sphere.pose)
+                    self.rotate(-1.0*rot_dir,point=self.collision_geometry.sphere.pose)
+                    # self.rotate(-1.0 * angle,point=self.collision_geometry.sphere.pose)
                     self.physics.position = old_pose
                     self.collision_geometry.translate(-1*offset)
                     self.barrel_geometry.translate(-1*offset)
@@ -308,8 +312,11 @@ class TankAI(Tank):
         else:
             self.barrel_at_setpoint = True
 
-    def compute_move(self,forces,delta_t,collision_bodies,target):
+    def compute_move(self,forces,delta_t,rotate,collision_bodies,target):
         shell = None
+
+        # rot_dir = rotate - self.angle
+        # self.rotate(1.0*numpy.sign(rot_dir)) 
 
         self.target = target
         self.set_barrel_angle()
@@ -317,6 +324,6 @@ class TankAI(Tank):
             self.set_power()
             shell = self.fire_shell()
             
-        self.update_position(forces,delta_t,0.0,collision_bodies)
+        self.update_position(forces,delta_t,rotate,collision_bodies)
         
         return shell

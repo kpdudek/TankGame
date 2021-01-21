@@ -61,6 +61,7 @@ class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBr
         
         self.collision_geometry.translate(offset)
         self.set_visual_geometry()
+        self.set_topology()
 
     def random(self):
         self.name ='ground'
@@ -75,6 +76,27 @@ class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBr
         self.collision_geometry.translate(offset)
 
         self.set_visual_geometry()
+        self.set_topology()
+
+    def set_topology(self):
+        self.topology = self.collision_geometry.vertices[:,0:-2]
+        r,c = self.topology.shape
+        self.num_segments = c - 1
+
+    def get_segment_angle(self,point):
+        x = point[0]
+        r,c = self.topology.shape
+        seg = None
+        for seg_idx in range(0,c-1):
+            if (x > self.topology[0,seg_idx]) and (x < self.topology[0,seg_idx + 1]):
+                seg = seg_idx
+        if seg:
+            dx = self.topology[0,seg+1] - self.topology[0,seg]
+            dy = self.topology[1,seg+1] - self.topology[1,seg]
+            angle = math.atan(dy/dx)
+            return angle
+        else:
+            return None
 
     def hit(self,shell,parent,blast=False):
         self.logger.log(f'{self.name} was hit by a {shell.name} fired by {parent.name}')
