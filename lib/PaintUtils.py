@@ -25,7 +25,7 @@ class Colors():
     maroon = '#B40431'
 
     def get_tank_colors(self):
-        tank_colors = [self.brown,self.midnight_blue,self.forest_green,self.white,self.gray,self.black,self.maroon]
+        tank_colors = [self.midnight_blue,self.forest_green,self.white,self.gray,self.black,self.maroon]
         return tank_colors
 
 

@@ -9,5 +9,6 @@
     "max_vel":30,
     "fire_rate":200,
     "armour_rating":0.20,
-    "health":200
+    "health":200,
+    "gas":500
 }

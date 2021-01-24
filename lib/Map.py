@@ -18,11 +18,14 @@ class MapCreator(QtWidgets.QWidget):
         self.bottom_height = 500
 
         num_vertices = random.randint(10,20)
+        up_sample = 3
+
         self.logger.log(f'Generating random map with {num_vertices} top vertices...')
-        grid = Noise.perlin_noise(num_vertices)
+
+        grid = Noise.perlin_noise(num_vertices*up_sample)
         idx = random.randint(0,num_vertices-1)
 
-        top_surface = grid[idx,:] * self.scale * -1.
+        top_surface = grid[idx,::up_sample] * self.scale * -1.
         x_spacing = numpy.linspace(0,self.length,num=num_vertices)
         vertices = numpy.vstack((x_spacing,top_surface))
         
@@ -87,10 +90,11 @@ class Map(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBr
         x = point[0]
         r,c = self.topology.shape
         seg = None
-        for seg_idx in range(0,c-1):
-            if (x > self.topology[0,seg_idx]) and (x < self.topology[0,seg_idx + 1]):
+        for seg_idx in range(0,c-2):
+            if (x >= self.topology[0,seg_idx]) and (x < self.topology[0,seg_idx + 1]):
                 seg = seg_idx
-        if seg:
+                break
+        if seg!=None:
             dx = self.topology[0,seg+1] - self.topology[0,seg]
             dy = self.topology[1,seg+1] - self.topology[1,seg]
             angle = math.atan(dy/dx)

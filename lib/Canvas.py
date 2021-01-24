@@ -74,7 +74,9 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
 
     def mouseReleaseEvent(self,e):
         try:
-            self.tanks[self.drag_tank_idx].physics.velocity += self.drag_vel * 1000
+            # self.tanks[self.drag_tank_idx].physics.velocity += self.drag_vel * 1000
+            self.tanks[self.drag_tank_idx].physics.velocity = numpy.zeros([2,1])
+            self.drag_tank_idx = None
         except:
             pass
 
@@ -119,6 +121,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     def next_turn(self):
         self.logger.log('Next turn...')
         self.tanks[self.selected_tank_idx].shots_fired = 0
+        self.tanks[self.selected_tank_idx].gas_used = 0.0
         self.tanks[self.selected_tank_idx].shots_left = self.tanks[self.selected_tank_idx].shot_limit - self.tanks[self.selected_tank_idx].shots_fired
         self.selected_tank_idx += 1
         if (self.selected_tank_idx > len(self.tanks)-1) or (self.selected_tank_idx < 0):
@@ -232,9 +235,10 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         for idx in range(0,len(self.tanks)):
             tank = self.tanks[idx]
             ground_angle = self.map.get_segment_angle(tank.collision_geometry.sphere.pose)
+            
             if not ground_angle:
                 ground_angle = tank.angle
-            # print(ground_angle)
+            
             if tank.health > 0:
                 forces = tank.gravity_force.copy()
                 # forces[1] = 0.0

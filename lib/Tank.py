@@ -25,9 +25,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.shot_limit = shell.capacity 
         self.shots_fired = 0
         self.shots_left = self.shot_limit - self.shots_fired
-        self.gas_limit = 1000.0
-        self.gas_used = 0.0
-        self.gas_left = self.gas_limit - self.gas_used
         self.xp = 0.0
         self.turn_over = False    
 
@@ -54,6 +51,9 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.lower_barrel_limit = math.radians(-200.0)
         self.health = float(tank_data['health'])
         self.max_health = float(tank_data['health'])
+        self.gas_limit = float(tank_data['gas'])
+        self.gas_used = 0.0
+        self.gas_left = self.gas_limit - self.gas_used
 
         self.collision_geometry = Geometry.Polygon(self.name)
         self.collision_geometry.from_tank_data(tank_data,'vertices')
