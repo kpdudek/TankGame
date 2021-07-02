@@ -6,11 +6,10 @@ import random, sys, os, math, time, numpy, json
 from lib import Utils, PaintUtils, Game, MainMenu, Canvas, Tank, Shell, GameOver
 
 class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
-
     def __init__(self,logger,debug_mode,screen,fps):
         super().__init__()
         self.fps = fps
-        self.physics_step_time = 1.0/60.0
+        # self.physics_step_time = 1.0/60.0
         self.logger = logger
         self.fps_actual = -1.0
         self.fps_max = -1.0
@@ -220,11 +219,10 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
             if tank.alive:
                 alive_count += 1
         
-        if alive_count > 1:
+        if (alive_count > 1) or (len(self.canvas.tanks)==1):
             # Capture loop start time
             tic = time.time()
             loop_time = tic - self.prev_loop_tic
-            physics_loops = int(loop_time/self.physics_step_time)
             
             # Compute game step
             if not self.is_paused:
@@ -233,7 +231,7 @@ class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
                 self.canvas.update_canvas(self.fps_actual,self.fps_max)
             toc = time.time()
 
-            # Try to compute the actual fps and max fps. Expect it might try to divide by zero
+            # Try to compute the actual fps and max fps. Expect that it might try to divide by zero
             try:
                 self.fps_actual = 1.0/(tic-self.prev_loop_tic)
                 self.fps_max = 1.0/(toc-tic)

@@ -135,12 +135,20 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         r = 9
         painter.drawEllipse(x-r, y-(r/2), r*2, r*2)
 
+        self.point_painter(painter,self.red)
+        painter.drawPoint(int(self.physics.position[0]),int(self.physics.position[1]))
+
         if self.debug_mode:
             x = int(self.collision_geometry.sphere.pose[0])
             y = int(self.collision_geometry.sphere.pose[1])
             r = int(self.collision_geometry.sphere.radius)
             self.tank_debug_painter(painter,self.red)
             painter.drawEllipse(x-r, y-r, r*2, r*2)
+            cm_x = self.collision_geometry.center_of_mass[0]
+            cm_y = self.collision_geometry.center_of_mass[1]
+            v_x = cm_x + self.physics.velocity[0]
+            v_y = cm_y + self.physics.velocity[1]
+            painter.drawLine(int(cm_x),int(cm_y),int(v_x),int(v_y))
             self.point_painter(painter,self.red)
             painter.drawPoint(x,y)
 
@@ -186,7 +194,8 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
         self.rotate_barrel(sign)
 
     def update_position(self,forces,delta_t,angle,collision_bodies):
-        old_pose = self.physics.position.copy()
+        self.previous_pose = self.physics.position.copy()
+        initial_velocity = self.physics.velocity.copy()
 
         rot_dir = 1.0*numpy.sign(angle - self.angle)
         self.rotate(rot_dir,point=self.collision_geometry.sphere.pose) 
@@ -214,15 +223,13 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
                 res = self.cc_fun.polygon_is_collision(data_p,int(r1),int(c1),data_p2,int(r2),int(c2))
                 if res:
                     self.rotate(-1.0*rot_dir,point=self.collision_geometry.sphere.pose)
-                    # self.rotate(-1.0 * angle,point=self.collision_geometry.sphere.pose)
-                    self.physics.position = old_pose
+                    self.physics.position = self.previous_pose.copy()
                     self.collision_geometry.translate(-1*offset)
                     self.barrel_geometry.translate(-1*offset)
                     self.barrel_tip -= offset
                     self.physics.velocity = numpy.zeros([2,1])
                     self.collided_with.append(body.name)
-                    offset = numpy.zeros([2,1])
-        
+            print(self.collided_with)
         self.update_visual_geometry()
 
     def fire_shell(self):
@@ -261,7 +268,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
 class TankAI(Tank):
     def __init__(self,logger, debug_mode, tank_file, shell_file, shell_list, name, color):
         super().__init__(logger, debug_mode, tank_file, shell_file, shell_list, name, color)
-        
         self.barrel_at_setpoint = False
     
     def set_power(self):

@@ -33,6 +33,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.drive_direction = 0.0
         self.barrel_direction = 0.0
         self.rotation_direction = 0.0
+        self.drag_tank_idx = None
 
         self.canvas = QtWidgets.QLabel()
         self.layout.addWidget(self.canvas)
@@ -66,7 +67,8 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         try:
             self.mouse_pose = numpy.array([[e.x()],[e.y()]])
             self.drag_vel = self.mouse_pose - self.prev_mouse_pose
-            self.tanks[self.drag_tank_idx].teleport(self.mouse_pose)
+            offset = self.tanks[self.drag_tank_idx].collision_geometry.center_of_mass_offset
+            self.tanks[self.drag_tank_idx].teleport(self.mouse_pose-offset)
             self.tanks[self.drag_tank_idx].physics.velocity = numpy.zeros([2,1])
             self.prev_mouse_pose = numpy.array([[e.x()],[e.y()]])
         except:
@@ -229,47 +231,60 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
     
     def update_physics(self,delta_t):
         self.process_key_presses()
-
         # Update tanks movement
         idx_offset = 0
         for idx in range(0,len(self.tanks)):
             tank = self.tanks[idx]
-            ground_angle = self.map.get_segment_angle(tank.collision_geometry.sphere.pose)
-            
-            if not ground_angle:
-                ground_angle = tank.angle
-            
-            if tank.health > 0:
-                forces = tank.gravity_force.copy()
-                # forces[1] = 0.0
-                if idx == self.selected_tank_idx:
-                    if type(tank) == Tank.TankAI:
-                        target_idx = idx + 1
-                        if target_idx >= len(self.tanks):
-                            target_idx = 0
-                        is_alive = self.tanks[target_idx].alive
-                        while not is_alive:
-                            target_idx = target_idx + 1
+            if idx == self.drag_tank_idx:
+                tank.update_visual_geometry()
+            else:
+                ground_angle = self.map.get_segment_angle(tank.collision_geometry.sphere.pose)
+                
+                if not ground_angle:
+                    # ground_angle = tank.angle
+                    ground_angle = tank.angle
+                
+                if tank.health > 0:
+                    if 'ground' in tank.collided_with:
+                        forces = numpy.zeros([2,1])
+                    else:
+                        # forces = tank.gravity_force.copy()
+                        forces = numpy.zeros([2,1])
+                    
+                    if idx == self.selected_tank_idx:
+                        if type(tank) == Tank.TankAI:
+                            target_idx = idx + 1
                             if target_idx >= len(self.tanks):
                                 target_idx = 0
                             is_alive = self.tanks[target_idx].alive
+                            while not is_alive:
+                                target_idx = target_idx + 1
+                                if target_idx >= len(self.tanks):
+                                    target_idx = 0
+                                is_alive = self.tanks[target_idx].alive
 
-                        target = self.tanks[target_idx].collision_geometry.sphere.pose.copy()
-                        shell = tank.compute_move(forces,delta_t,ground_angle,[self.map],target)
-                        if shell:
-                            self.shells.append(shell)
-                
-                    elif type(tank) == Tank.Tank:
-                        if self.tanks[self.selected_tank_idx].gas_left > 0:
-                            if self.drive_direction:
-                                forces[0] += self.drive_direction * tank.drive_force
-                            if self.barrel_direction:
-                                forces[1] += self.barrel_direction * tank.drive_force
+                            target = self.tanks[target_idx].collision_geometry.sphere.pose.copy()
+                            shell = tank.compute_move(forces,delta_t,ground_angle,[self.map],target)
+                            if shell:
+                                self.shells.append(shell)
+                    
+                        elif type(tank) == Tank.Tank:
+                            if self.tanks[self.selected_tank_idx].gas_left > 0:
+                                if self.drive_direction:
+                                    fx = (self.drive_direction * tank.drive_force)*math.cos(tank.angle)
+                                    fy = (self.drive_direction * tank.drive_force)*math.sin(tank.angle)
+                                    forces[0] += fx
+                                    forces[1] += fy + (self.barrel_direction * tank.drive_force)
+                                    # forces[1] -= 5000000.0
+                                if self.barrel_direction:
+                                    forces[1] += (self.barrel_direction * tank.drive_force)
+                            tank.update_position(forces,delta_t,ground_angle,[self.map])
+                        # forces = tank.gravity_force.copy()
+                        # tank.update_position(forces,delta_t,ground_angle,[self.map])
+                    else:
                         tank.update_position(forces,delta_t,ground_angle,[self.map])
                 else:
-                    tank.update_position(forces,delta_t,ground_angle,[self.map])
-            else:
-                tank.alive = False
+                    tank.alive = False
                 
         self.drive_direction = 0.0
         self.barrel_direction = 0.0

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json
+from PyQt5 import QtWidgets
+import time, numpy
 
-from lib import Utils, PaintUtils, Geometry
+from lib import Utils
 
 class Physics2D(QtWidgets.QWidget,Utils.FilePaths):
     time_scaling = 1.0
@@ -43,6 +43,5 @@ class Physics2D(QtWidgets.QWidget,Utils.FilePaths):
         return offset
 
     def compute_drag(self):
-        # if self.velocity[0] 
         self.drag_force[0] = self.c_d * (-1.0*self.velocity[0])
         self.force[0] += self.drag_force[0]

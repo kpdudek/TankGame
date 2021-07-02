@@ -255,6 +255,7 @@ class Polygon(object):
             vertices[1,idx] = vertex[1]
         self.vertices = vertices
         self.set_bounding_sphere()
+        self.center_of_mass_offset = self.center_of_mass - self.vertices[:,0].reshape(2,1)
     
     def from_shell_data(self,shell_data):
         vertices = np.zeros([2,len(shell_data['vertices'])])
