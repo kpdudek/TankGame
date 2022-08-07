@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json, ctypes
-
 from lib import Utils, PaintUtils, Geometry, Physics, Shell
-
+from PyQt5 import QtCore, QtGui, QtWidgets
+import math, time, numpy, json, ctypes
 
 class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
     turn_over_signal = QtCore.pyqtSignal()
@@ -229,7 +227,6 @@ class Tank(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintB
                     self.barrel_tip -= offset
                     self.physics.velocity = numpy.zeros([2,1])
                     self.collided_with.append(body.name)
-            print(self.collided_with)
         self.update_visual_geometry()
 
     def fire_shell(self):

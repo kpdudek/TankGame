@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
 from PyQt5 import QtWidgets
-import time, numpy
-
 from lib import Utils
+import time, numpy
 
 class Physics2D(QtWidgets.QWidget,Utils.FilePaths):
     time_scaling = 1.0

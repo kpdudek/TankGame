@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
-import random, sys, os, math, time
 from matplotlib import pyplot as plt
-from matplotlib import patches
+import sys, os, time
 import numpy as np
 
 path = os.getcwd()
 sys.path.insert(1,os.path.dirname(path))
 
-import Utils as util
 import Geometry as geom
 
 

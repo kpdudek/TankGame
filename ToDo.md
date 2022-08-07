@@ -1,0 +1,1 @@
+* make an Entity class that both Tank and Shell derive from. The entity class has data like it's collision geometry and methods for updating it's position. Once derived, methods for updating geometry, exploding, etc.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, sys, time, inspect, pathlib
+import sys, inspect, pathlib
 import datetime as dt
 
 class Error(Exception):

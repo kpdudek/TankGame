@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json
-
 from lib import Utils, PaintUtils, Geometry, Noise
+from PyQt5 import QtCore, QtGui, QtWidgets
+import random, math, numpy, json
 
 class MapCreator(QtWidgets.QWidget):
     def __init__(self,logger, debug_mode):

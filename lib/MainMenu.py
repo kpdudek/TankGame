@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy
-
-from lib import Utils, PaintUtils, Game, KeyControls
-
+from PyQt5 import QtCore, QtWidgets, uic
+from lib import Utils, KeyControls
+import os
 
 class MainMenu(QtWidgets.QWidget,Utils.FilePaths):
 

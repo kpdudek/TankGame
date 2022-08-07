@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json
-
-from lib import Utils, PaintUtils, Game, MainMenu, Canvas, Tank, Shell, GameOver
+from lib import Utils, PaintUtils, MainMenu, Canvas, Tank, GameOver
+from PyQt5 import QtCore, QtGui, QtWidgets
+import random, time, json
 
 class Game(QtWidgets.QMainWindow,Utils.FilePaths,PaintUtils.Colors):
     def __init__(self,logger,debug_mode,screen,fps):

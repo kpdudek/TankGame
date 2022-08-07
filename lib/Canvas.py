@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json
-
 from lib import Utils, PaintUtils, Geometry, PauseMenu, Map, KeyControls, Tank
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
+import math, numpy
 
 class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
 
@@ -34,6 +33,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         self.barrel_direction = 0.0
         self.rotation_direction = 0.0
         self.drag_tank_idx = None
+        self.turn_count = 1
 
         self.canvas = QtWidgets.QLabel()
         self.layout.addWidget(self.canvas)
@@ -132,6 +132,8 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
             self.selected_tank_idx += 1
             if (self.selected_tank_idx > len(self.tanks)-1) or (self.selected_tank_idx < 0):
                 self.selected_tank_idx = 0
+
+        self.turn_count += 1
 
     def load_map(self,map_file):
         self.map = Map.Map(self.logger,self.debug_mode)
@@ -248,8 +250,8 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
                     if 'ground' in tank.collided_with:
                         forces = numpy.zeros([2,1])
                     else:
-                        # forces = tank.gravity_force.copy()
-                        forces = numpy.zeros([2,1])
+                        forces = tank.gravity_force.copy()
+                        # forces = numpy.zeros([2,1])
                     
                     if idx == self.selected_tank_idx:
                         if type(tank) == Tank.TankAI:
@@ -328,7 +330,7 @@ class Canvas(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.Pain
         except:
             self.aim_label = ''
 
-        self.xp_label = 'Game Standings:\n'
+        self.xp_label = f'Game Standings at turn {self.turn_count}:\n'
         for tank in self.tanks:
             self.xp_label += f"{tank.name}: {tank.xp}\n"
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json, ctypes
-
 from lib import Utils, PaintUtils, Geometry, Physics
+from PyQt5 import QtCore, QtGui, QtWidgets
+import math, numpy, json, ctypes
+
 
 class Shell(QtWidgets.QWidget,Utils.FilePaths,PaintUtils.Colors,PaintUtils.PaintBrushes):
     done_signal = QtCore.pyqtSignal()

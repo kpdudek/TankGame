@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json
-
-from lib import Utils, PaintUtils, Geometry
+import random, numpy
 
 def Shuffle(tab):
     for e in reversed(range(0,len(tab)-1)):

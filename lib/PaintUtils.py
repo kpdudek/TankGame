@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtCore import Qt
+from PyQt5 import QtGui
 
 class Colors():
     # Game Colors

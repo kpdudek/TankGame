@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
-import random, sys, os, math, time
-from matplotlib import pyplot as plt
-from matplotlib import patches
+import sys, os, time
 import numpy as np
-
 import ctypes
 
 path = os.getcwd()
@@ -49,10 +46,10 @@ class CollisionCheckTest(FilePaths):
         data_p2 = data2.ctypes.data_as(self.c_float_p)
 
 
-        returnVale = self.fun.polygon_is_collision(data_p,2,4,data_p2,2,4)
+        return_val = self.fun.polygon_is_collision(data_p,2,4,data_p2,2,4)
         toc = time.time()    
         print(f'C function took: {toc-tic}')
-        print(f'Collision result: {returnVale}')
+        print(f'Collision result: {return_val}')
 
         #####################################################################
         # Polygon Collision Checking in Python

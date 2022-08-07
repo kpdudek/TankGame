@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
 
-import os, sys, time, math, copy, random
-import datetime as dt
-import numpy as np
-
-from threading import Thread
 from math import sin,cos,atan2
-from multiprocessing import Process, Pool
-
-from lib import Utils
+import numpy as np
 
 def px_to_m(pixels):
     '''
@@ -64,7 +57,7 @@ def edge_angle(ang_type,*argv):
         vertex2[0] = vertex2[0] - vertex0[0]
         vertex2[1] = vertex2[1] - vertex0[1]
     else:
-        log('Edge angle type not recognized!',color='r')
+        print('Edge angle type not recognized!',color='r')
         return None
 
     # Dot product of the vectors

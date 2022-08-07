@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy, json
-
-from lib import Utils, PaintUtils, Geometry
+from PyQt5 import QtCore, QtWidgets, uic
+from lib import Utils
 
 class PauseMenu(QtWidgets.QWidget,Utils.FilePaths):
     pause_signal = QtCore.pyqtSignal()
