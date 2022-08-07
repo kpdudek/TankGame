@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import random, sys, os, math, time, numpy
+from PyQt5 import QtWidgets
+import sys, os
 
 from lib import Utils, PaintUtils, Game
 
@@ -20,6 +20,7 @@ def main(logger):
         debug_mode = True
     else:
         debug_mode = False
+    
     # Create the instance of our Window 
     game_window = Game.Game(logger,debug_mode,app.primaryScreen(),fps) 
 
