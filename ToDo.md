@@ -1,5 +1,8 @@
 # ToDo:
 
+* define entity data structure with visual geometry and collision geometry. Collision geometry may contain only rectangles
+and circles for representing the visual geometry's perimeter.
+
 * make an Entity class that both Tank and Shell derive from. The entity class has data like it's collision geometry and methods for updating it's position. Once derived, methods for updating geometry, exploding, etc.
 
 * add a 'Delete All' menu option to delete all save files. Prompt user to confirm action.
