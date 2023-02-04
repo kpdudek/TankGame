@@ -1,47 +1,48 @@
 # Tank Game
+A classic 2D tank game developed in python using PyQt5 and Numpy
 
 ## Installation
-To run the game you need python3, pip3, numpy, and PyQt5.
+The supported platforms are currently Linux and Windows 10.
+To run the simulation you will need to have the following installed:
+* python3 (>3.6)
+* pip3
+* numpy
+* PyQt5
+* git (reccomended)
 
-#### Ubuntu 18.04
+If you would prefer not to install git and clone the repo, you can download the files from the [main repository webpage](https://github.com/kpdudek/TankGame) by selecing the green `Code` and then `Download ZIP`.
+
+#### *Ubuntu 20.04:*
 ```
-sudo apt-get install git
+sudo apt install git python3 python3-pip
 git clone https://github.com/kpdudek/TankGame.git
-sudo apt-get install python3-pip
-pip3 install PyQt5 
-pip3 install numpy
+pip3 install PyQt5 numpy
 ```
 
-#### Windows 10
-Download python >3.7 from the Microsoft Store and then use pip3 to install PyQt5 and numpy from PowerShell.
+#### *Windows 10:*
+Download python >3.7 from the Microsoft Store and then use pip3 (included in the Microsoft Store download) to install PyQt5 and numpy.
+
 Install git as described [here](https://www.computerhope.com/issues/ch001927.htm#:~:text=How%20to%20install%20and%20use%20Git%20on%20Windows,or%20fetching%20updates%20from%20the%20remote%20repository.%20)
 ```
 git clone https://github.com/kpdudek/TankGame.git
-pip3 install PyQt5 
-pip3 install numpy
+pip3 install PyQt5 numpy
 ```
 
-## Playing the Game
-Launch the game by navigating to the Tank Game folder in a terminal and then executing `main.py`
+## Running the Simulation
+After installation, launch the simulation by navigating to the `TankGame` repo you just cloned (or downloaded) and then executing the `main.py` file as follows:
 ```
-user@computer:~/path/to/TankGame$ python3 main.py
-```
-
-You can launch the game in debug mode by passing `-d` as an argument.
-
-## Developing
-If you're developing, install PyQt tools to get Qt Designer for editing the UI files.
-```
-pip3 install pyqt5-tools
+/path/to/TankGame> python3 main.py 
 ```
 
-### Compiling C library for collision checking
-Use the cc compiler for creating the required libraries.
-On linux:
-```
-cc -fPIC -shared -o cc_lib.so collision_check.c
-```
-On Windows:
-```
-cc -fPIC -shared -o cc_lib.dll collision_check.c
-```
+## Keyboard Controls
+**Exit:** Esc
+
+**Camera Pan:** W/S/A/D
+
+**Zoom:** Z/X
+
+**Center Camera:** C
+
+**Pause/Resume:** P
+
+**Enable Debug Mode:** Space Bar

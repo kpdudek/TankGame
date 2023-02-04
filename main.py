@@ -1,37 +1,36 @@
 #!/usr/bin/env python3
 
-from PyQt5 import QtWidgets
-import sys, os
+from PyQt5.QtWidgets import QApplication
+from lib.Utils import initialize_logger
+from lib.MainWindow import MainWindow
+import sys
 
-from lib import Utils, PaintUtils, Game
-
-def main(logger):
-    file_paths = Utils.FilePaths()
-    assert(file_paths.cc_lib_path in os.listdir('./lib/')),"cc_lib.so/.dll doesn't exist! Be sure to compile collision_check.c as cc_lib.so/.dll!"
-
-    fps = 100.0
-    palette = PaintUtils.DarkColors().palette
-
-    app = QtWidgets.QApplication(sys.argv)
-    app.setStyle("fusion")
-    app.setPalette(palette)
-
-    if '-d' in sys.argv:
+def main():
+    debug_mode = False
+    cl_args = sys.argv[1:]
+    if "-d" in cl_args:
+        logger = initialize_logger(level="DEBUG")
         debug_mode = True
     else:
-        debug_mode = False
+        logger = initialize_logger(level="INFO")
+    logger.info(f"Simulation starting with options: {cl_args}")
     
-    # Create the instance of our Window 
-    game_window = Game.Game(logger,debug_mode,app.primaryScreen(),fps) 
-
-    # Start the app 
-    sys.exit(app.exec()) 
+    app = QApplication(sys.argv)
+    screen_resolution = app.desktop().screenGeometry()
+    main_window = MainWindow(screen_resolution,debug_mode)
+    try:
+        main_window.settings.tank_count_spinbox.setValue(int(cl_args[0]))
+    except ValueError:
+        logger.warning(f'Invalid optional arguments.')
+    except IndexError:
+        logger.warning(f'No optional arguments provided.')
+    except:
+        logger.warning(f'Unhandled exception.')
+    main_window.settings.reset_simulation()
+    main_window.scene.tanks[0].set_current_player(True)
+    
+    app.exec_()
+    logger.info("Simulation ended.")
 
 if __name__ == '__main__':
-    try:
-        logger = Utils.Logger()
-        logger.log('Launching game...')
-        main(logger)
-    finally:
-        logger.log('Game terminated.')
-        logger.end()
+    main()

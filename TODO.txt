@@ -1,0 +1,11 @@
+* Make a frame class that is similar to a boid but self draw axes using QLineItem added to QGraphicsScene
+
+* Mouse scroll wheel zoom and right mouse button pan
+
+* Left mouse button to select an entity
+
+* Make entity info panel that is a child of the entity. Just like the debug line
+
+* Make all settings apply on change
+
+* Rather than having a hardcoded steering force, use a PID controller to drive the boids to a position
