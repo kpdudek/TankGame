@@ -13,24 +13,24 @@ def main():
         debug_mode = True
     else:
         logger = initialize_logger(level="INFO")
-    logger.info(f"Simulation starting with options: {cl_args}")
+    logger.info(f"Game starting with options: {cl_args}")
     
     app = QApplication(sys.argv)
     screen_resolution = app.desktop().screenGeometry()
     main_window = MainWindow(screen_resolution,debug_mode)
     try:
-        main_window.settings.tank_count_spinbox.setValue(int(cl_args[0]))
+        main_window.settings.ui.tank_count_spinbox.setValue(int(cl_args[0]))
     except ValueError:
         logger.warning(f'Invalid optional arguments.')
     except IndexError:
-        logger.warning(f'No optional arguments provided.')
+        logger.info(f'No optional arguments provided.')
     except:
         logger.warning(f'Unhandled exception.')
     main_window.settings.reset_simulation()
-    main_window.scene.tanks[0].set_current_player(True)
+    # main_window.scene.tanks[0].set_current_player(True)
     
     app.exec_()
-    logger.info("Simulation ended.")
+    logger.info("Game ended.")
 
 if __name__ == '__main__':
     main()

@@ -99,7 +99,7 @@ class Tank(object):
         self.steering_force = np.zeros(2)
         self.ground_angle: float = 0.0 #radians
         self.touching_ground = False
-        self.barrell_angle = 0.0
+        self.barrel_angle = 0.0
         self.theta_prev = 0.0
 
     def __str__(self) -> str:
@@ -109,29 +109,38 @@ class Tank(object):
         with open(f'{self.file_paths.entity_path}tank.json','r') as fp:
             self.config = json.load(fp)
         
-        png_file = f"{self.file_paths.entity_path}{self.config['png_file']}"
+        # png_file = f"{self.file_paths.entity_path}{self.config['png_file']}"
         self.hitpoints: int = int(self.config['hitpoints'])
         self.search_radius: int = int(self.config['search_radius'])
 
-        # Scale the pixmap based on the 1x2 array or keep default size if value is null
-        pixmap = QtGui.QPixmap(png_file)
-        x_size = pixmap.size().width()*self.config['png_scale'][0]
-        y_size = pixmap.size().height()*self.config['png_scale'][1]
-        if self.config['maintain_aspect']:
-            pixmap = pixmap.scaled(x_size, y_size, Qt.KeepAspectRatio)
-        else:
-            pixmap = pixmap.scaled(x_size, y_size)
-        mask = pixmap.createMaskFromColor(QtGui.QColor(0, 0, 0), Qt.MaskOutColor)
-        p = QtGui.QPainter(pixmap)
-        p.setPen(QtGui.QColor(randint(0,255), randint(0,255), randint(0,255)))
-        p.drawPixmap(pixmap.rect(), mask, mask.rect())
-        p.end()
         
-        self.pixmap = QGraphicsPixmapItem(pixmap)
-        x = pixmap.size().width()/2
-        y = pixmap.size().height()/2
-        self.center_offset:np.ndarray = np.array([pixmap.size().width()/2,pixmap.size().height()/2])
+        width = 50
+        height = 20
+        self.pixmap = QGraphicsRectItem(0,0,width,height)
+        r,g,b = randint(0,255), randint(0,255), randint(0,255)
+        color = QtGui.QColor(r,g,b)
+        black = QtGui.QColor(0,0,0)
+        self.pixmap.setPen(black)
+        self.pixmap.setBrush(color)
+        # x = self.pixmap.size().width()/2
+        # y = self.pixmap.size().height()/2
+        x = width/2
+        y = height/2
+        # self.center_offset:np.ndarray = np.array([self.pixmap.size().width()/2,self.pixmap.size().height()/2])
+        self.center_offset:np.ndarray = np.array([x,y])
         self.pixmap.setTransformOriginPoint(x,y)
+
+        # Dome
+        r = 24
+        self.dome = QGraphicsEllipseItem(x-r/2,-r/2,r,r,self.pixmap)
+        self.dome.setPen(black)
+        self.dome.setBrush(color)
+
+        # barrel
+        self.barrel = QGraphicsRectItem(x,-r/3,25,6,self.pixmap)
+        self.barrel.setPen(black)
+        self.barrel.setBrush(color)
+        self.barrel.setTransformOriginPoint(x,-r/6)
 
         # Current player display
         self.current_player_stats = QGraphicsTextItem(self.active_stats_str,self.pixmap)
@@ -147,7 +156,11 @@ class Tank(object):
         self.debug_search_radius = QGraphicsEllipseItem(x-self.search_radius/2,y-self.search_radius/2,self.search_radius,self.search_radius,self.pixmap)
         self.debug_items.append(self.debug_search_radius)
         # Bounding rectangle
-        self.debug_pose = QGraphicsRectItem(0,0,x_size,y_size,self.pixmap)
+        self.debug_pose = QGraphicsRectItem(0,0,width,height,self.pixmap)
+        pen = QtGui.QPen()
+        pen.setWidth(2)
+        pen.setColor(QtGui.QColor(0,0,0))
+        self.debug_pose.setPen(pen)
         self.debug_items.append(self.debug_pose)
         # Title
         self.debug_text = QGraphicsTextItem(str(self.name),self.pixmap)
@@ -183,8 +196,10 @@ class Tank(object):
         self.physics.theta = angle
         self.pixmap.setRotation(degrees(-angle))
 
-    def rotate_barrell(self,direction):
-        pass
+    def rotate_barrel(self,direction):
+        angle = self.barrel_angle + direction * 0.5
+        self.barrel.setRotation(angle)
+        self.barrel_angle = angle
 
     def drive(self,direction):
         if self.touching_ground:

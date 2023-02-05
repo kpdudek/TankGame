@@ -24,6 +24,8 @@ class Camera(QGraphicsView):
         self.setHorizontalScrollBarPolicy( Qt.ScrollBarAlwaysOff )
         self.horizontalScrollBar().disconnect()
         self.verticalScrollBar().disconnect()
+
+        self.setFocusPolicy(Qt.StrongFocus)
        
     def mousePressEvent(self, event):
         self.mousepress_signal.emit(event)

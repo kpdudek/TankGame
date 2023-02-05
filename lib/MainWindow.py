@@ -8,8 +8,9 @@ from PyQt5.QtCore import Qt, QTimer
 from lib.Settings import Settings
 from PyQt5.QtGui import QIcon
 from lib.Camera import Camera
-from lib.Scene import Scene
 from lib.Entity import Tank
+from lib.Scene import Scene
+from PyQt5 import QtGui
 from typing import List
 import numpy as np
 import time
@@ -58,7 +59,7 @@ class MainWindow(QMainWindow):
         self.camera.mousemove_signal.connect(self.mouseMoveEvent)
         self.camera.mouserelease_signal.connect(self.mouseReleaseEvent)
 
-        self.settings = Settings(self.scene,debug_mode)
+        self.settings = Settings(self.scene,self.camera,debug_mode)
         self.settings.set_debug_mode_signal.connect(self.set_debug_mode)
         self.settings.toggle_fps_log_signal.connect(self.toggle_fps_log)
         self.settings.reset_simulation_signal.connect(self.reset_simulation)
@@ -67,7 +68,6 @@ class MainWindow(QMainWindow):
 
         self.ui.layout.addWidget(self.camera)
         self.ui.layout.addWidget(self.settings)
-        self.setFocusPolicy(Qt.StrongFocus)
         self.show()
         
         self.loop_count = 0
@@ -82,8 +82,8 @@ class MainWindow(QMainWindow):
             self.fps_log_timer.start(1000)
         else:
             self.fps_log_timer.stop()
-    
-    def mousePressEvent(self, e):
+
+    def mousePressEvent(self, e:QtGui.QMouseEvent):
         self.button = e.button()
         pose = np.array([e.x(),e.y()])
         pose_scene = self.camera.mapToScene(pose[0],pose[1])
@@ -115,7 +115,7 @@ class MainWindow(QMainWindow):
         elif self.button == 4: # Wheel click
             pass
 
-    def mouseMoveEvent(self, e):
+    def mouseMoveEvent(self, e:QtGui.QMouseEvent):
         pose = np.array([e.x(),e.y()])
         pose_scene = self.camera.mapToScene(pose[0],pose[1])
         pose_scene = np.array([pose_scene.x(),pose_scene.y()])
@@ -132,7 +132,7 @@ class MainWindow(QMainWindow):
         elif self.button == 4: # Wheel click
             pass
     
-    def mouseReleaseEvent(self, e):
+    def mouseReleaseEvent(self, e:QtGui.QMouseEvent):
         pose = np.array([e.x(),e.y()])
         pose_scene = self.camera.mapToScene(pose[0],pose[1])
         pose_scene = np.array([pose_scene.x(),pose_scene.y()])
@@ -153,37 +153,37 @@ class MainWindow(QMainWindow):
             pass
         self.button = None
     
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
-        if key == Qt.Key_Escape:
+        if key == Qt.Key.Key_Escape:
             self.shutdown()
-        elif key == Qt.Key_C:
+        elif key == Qt.Key.Key_C:
             self.scene.boid_count_display.setPos(0,0)
             self.camera.resetTransform()
-        elif key == Qt.Key_P:
+        elif key == Qt.Key.Key_P:
             if self.paused:
                 self.logger.info('Resuming...')
                 self.paused = False
             else:
                 self.logger.info('Pausing...')
                 self.paused = True
-        elif key == Qt.Key_Space:
+        elif key == Qt.Key.Key_Space:
             if self.debug_mode:
                 self.settings.ui.debug_mode_checkbox.setChecked(False)
             else:
                 self.settings.ui.debug_mode_checkbox.setChecked(True)
-        elif key == Qt.Key_V:
+        elif key == Qt.Key.Key_V:
             self.frame_idx += 1
-        elif key == Qt.Key_N:
+        elif key == Qt.Key.Key_N:
             self.scene.tanks[self.current_player_idx].set_current_player(False)
             self.current_player_idx += 1
-            if self.current_player_idx > len(self.tanks-1):
+            if self.current_player_idx > len(self.scene.tanks)-1:
                 self.current_player_idx = 0
             self.scene.tanks[self.current_player_idx].set_current_player(True)
         elif not event.isAutoRepeat():
             self.keys_pressed.append(key)
     
-    def keyReleaseEvent(self, event):
+    def keyReleaseEvent(self, event: QtGui.QKeyEvent):
         if not event.isAutoRepeat() and event.key() in self.keys_pressed:
             self.keys_pressed.remove(event.key())
 
@@ -203,6 +203,8 @@ class MainWindow(QMainWindow):
             self.settings_visible = True
             self.settings.ui.expand_collapse_settings_button.setIcon(QIcon(f'{self.file_paths.user_path}ui/icons/expand_down.png'))
 
+        self.camera.setFocus(True)
+
     def fps_log(self):
         self.logger.info(f'Max FPS: {self.loop_fps}')
         if self.loop_fps<self.fps:
@@ -219,33 +221,33 @@ class MainWindow(QMainWindow):
         scene_y = self.scene.sceneRect().height()
         
         for key in self.keys_pressed:
-            if key == Qt.Key_W:
+            if key == Qt.Key.Key_W:
                 if camera_y > scene_y*scale_y:
                     return
                 self.camera.translate(0,cam_speed)
-            elif key == Qt.Key_S:
+            elif key == Qt.Key.Key_S:
                 if camera_y > scene_y*scale_y:
                     return
                 self.camera.translate(0,-cam_speed)
-            elif key == Qt.Key_A:
+            elif key == Qt.Key.Key_A:
                 if camera_x > scene_x*scale_x:
                     return
                 self.camera.translate(cam_speed,0)
-            elif key == Qt.Key_D:
+            elif key == Qt.Key.Key_D:
                 if camera_x > scene_x*scale_x:
                     return
                 self.camera.translate(-cam_speed,0)
-            elif key == Qt.Key_Z:
+            elif key == Qt.Key.Key_Z:
                 self.camera.scale(1.0-zoom_speed,1.0-zoom_speed)
-            elif key == Qt.Key_X:
+            elif key == Qt.Key.Key_X:
                 self.camera.scale(1.0+zoom_speed,1.0+zoom_speed)
-            elif key == Qt.Key_Up:
-                self.scene.tanks[self.current_player_idx].rotate_barrell(-1)
-            elif key == Qt.Key_Down:
-                self.scene.tanks[self.current_player_idx].rotate_barrell(1)
-            elif key == Qt.Key_Left:
+            elif key == Qt.Key.Key_Up:
+                self.scene.tanks[self.current_player_idx].rotate_barrel(-1)
+            elif key == Qt.Key.Key_Down:
+                self.scene.tanks[self.current_player_idx].rotate_barrel(1)
+            elif key == Qt.Key.Key_Left:
                 self.scene.tanks[self.current_player_idx].drive(-1)
-            elif key == Qt.Key_Right:
+            elif key == Qt.Key.Key_Right:
                 self.scene.tanks[self.current_player_idx].drive(1)
     
     def set_debug_mode(self,enabled):
