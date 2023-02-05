@@ -10,9 +10,6 @@ def main():
     Make sure to run this script from the demo-director folder for correct
     relative paths for the icons.
     '''
-    if sys.platform == 'win32':
-        print('Windows is not supported yet.')
-        return
     if 'ui' not in os.listdir('.'):
         print('Could not locate the ui/ folder. Are you running the script from the demo-director directory?')
         return

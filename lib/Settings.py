@@ -43,7 +43,7 @@ class Settings(QWidget):
     def reset_simulation(self):
         num_tanks = self.ui.tank_count_spinbox.value()
         max_vel = self.ui.max_speed_spinbox.value()
-        self.scene.initialize_scene(num_tanks=num_tanks,max_vel=max_vel)
+        self.scene.initialize_scene(num_tanks=num_tanks,max_vel=50.0)
         self.toggle_debug_mode()
         self.toggle_fps_log()
 
