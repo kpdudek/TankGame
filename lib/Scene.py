@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsTextItem
 from lib.Utils import initialize_logger, FilePaths
 from PyQt5.QtWidgets import QGraphicsPixmapItem
 from PyQt5.QtGui import QPen, QBrush, QColor
-from lib.Entity import Tank, Map
+from lib.Entity import Tank, Map, Shell
 from PyQt5.QtCore import Qt
 from random import randint
 from PyQt5 import QtCore
@@ -31,7 +31,7 @@ class Scene(QGraphicsScene):
 
         self.setBackgroundBrush(QBrush(QColor('#5ADCEC')))
 
-    def initialize_scene(self,num_tanks=50,max_vel=400.0):        
+    def initialize_scene(self,num_tanks,max_vel):        
         self.logger.info(f'Initializing scene with {num_tanks} tanks...')
         self.number_of_tanks = num_tanks
 
@@ -43,6 +43,10 @@ class Scene(QGraphicsScene):
         # Clear tank and tank pixmap lists
         self.tanks: List[Tank] = []
         self.tank_pixmaps: List[QGraphicsPixmapItem] = []
+
+        # Clear shells
+        self.shells: List[Shell] = []
+        self.shell_pixmaps = []
         
         # Create a new terrain object
         self.terrain = Map(self.boundary_size,'map',uuid.uuid4())
@@ -62,7 +66,7 @@ class Scene(QGraphicsScene):
         self.addItem(self.boid_count_display)
 
         # Spawn starting tanks
-        step_size = 200.0
+        step_size = 500.0
         y_offset = 50.0
         x_offset = y_offset
         for i in range(self.number_of_tanks):
@@ -70,14 +74,11 @@ class Scene(QGraphicsScene):
             x_offset += step_size
 
     def set_debug_mode(self,enabled):
-        if enabled:
-            for tank in self.tanks:
-                tank.set_debug_mode(True)
-                self.debug_mode = True
-        else:
-            for tank in self.tanks:
-                tank.set_debug_mode(False)
-                self.debug_mode = False
+        for tank in self.tanks:
+            tank.set_debug_mode(enabled)
+        for shell in self.shells:
+            shell.set_debug_mode(enabled)
+        self.debug_mode = enabled
     
     def update_window_text(self):
         text = f"Tanks: {len(self.tanks)}\n"
@@ -91,12 +92,25 @@ class Scene(QGraphicsScene):
         
         name = 'kurt'
         tank = Tank(self.boundary_size,name,uuid.uuid4(),1.0,max_vel,pose)
+        tank.shell_fired_signal.connect(self.shell_fired)
         self.tanks.append(tank)
         self.tank_pixmaps.append(tank.pixmap)
         self.addItem(tank.pixmap)
         self.update_window_text()
+    
+    def shell_fired(self,tank_name: str,shell: Shell):
+        self.logger.info(f"Tank [{tank_name}] fired shell [{shell.name}]")
+        shell.set_debug_mode(self.debug_mode)
+        self.addItem(shell.pixmap)
+        self.shells.append(shell)
+        self.shell_pixmaps.append(shell.pixmap)
 
     def update(self,time):
+        self.gravity = np.array([0,50.8])
+        for idx,shell in enumerate(self.shells):
+            force = self.gravity
+            shell.update(force,time)
+        
         # For each tank, find it's nearest neighbors
         # by checking if their position lies within a certain raius
         forces = []
@@ -140,17 +154,11 @@ class Scene(QGraphicsScene):
                 self.logger.debug(f"\tVelocity: {tank.physics.velocity}")
                 self.logger.debug(f"\tSteering force: {tank.steering_force}")
                 self.logger.debug(f"\tIn collision with: {collision_names}")
-
-            # if touching_ground:
-            #     tank.rotate(angle)
-            #     return
+            
             if self.terrain.pixmap in collisions:
                 force = np.zeros(2)
             else:
-                force = np.array([0,50.8])
+                force = self.gravity
             forces.append(force)
             tank.update(force,time)
             tank.rotate(angle)
-
-        # for idx,tank in enumerate(self.tanks):
-        #     tank.update(forces[idx],time)

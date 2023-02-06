@@ -1,0 +1,13 @@
+{
+    "name":"simple_shell",
+    "png_file":"",
+    "png_scale":[1.0,1.0],
+    "maintain_aspect":true,
+    "pose":[0.0,0.0],
+    "mass":1.0,
+    "max_vel": 100,
+    "damage": 20,
+    "blast_radius": 50,
+    "armour_penetration": 0.2,
+    "launch_force": 1000
+}

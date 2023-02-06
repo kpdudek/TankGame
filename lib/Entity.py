@@ -3,15 +3,17 @@
 from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsPolygonItem
 from lib.Noise import generate_perlin_noise_2d, generate_fractal_noise_2d
 from PyQt5.QtWidgets import QGraphicsRectItem, QGraphicsTextItem
+from PyQt5.QtCore import Qt, QPointF, pyqtSignal, QPoint
 from lib.Utils import initialize_logger, FilePaths
-from PyQt5.QtCore import Qt, QPointF
 from lib.Physics2D import Physics2D
 from lib.Geometry import edge_angle
+from PyQt5.QtWidgets import QWidget
 from random import randint
 from math import degrees
 from PyQt5 import QtGui
 import numpy as np
-import json
+import json, uuid
+import math
 
 class Map(object):
     def __init__(self,boundary_size,name,id):
@@ -50,7 +52,8 @@ class Map(object):
         self.top_mesh = generate_perlin_noise_2d(np.array([1,self.size]),np.array([1,2]))
         self.top_mesh += 1.0
         self.top_mesh = self.top_mesh / 2.0
-        self.top_mesh = self.top_mesh * 1000.0
+        self.top_mesh = self.top_mesh * 800.0
+        self.top_mesh = self.top_mesh - 100
         self.logger.debug(f'Map generated with top mesh heights: {self.top_mesh_str()}')
 
         self.vertices = np.zeros((2,self.size+2))
@@ -80,7 +83,87 @@ class Map(object):
         angle = edge_angle(self.vertices[:,idx-1].copy(),self.vertices[:,idx].copy(),np.array([self.vertices[0,idx-1]+200,self.vertices[1,idx-1]]))
         return angle
 
-class Tank(object):
+class Shell(QWidget):
+    def __init__(self,id,starting_pose,theta,power):
+        super().__init__()
+        self.logger = initialize_logger()
+        self.file_paths = FilePaths()
+        self.id = id
+        self.config = None
+        self.steering_force = np.zeros(2)
+        self.ground_angle: float = 0.0 #radians
+        self.touching_ground = False
+        self.power = power
+        self.load_config()
+
+        self.physics:Physics2D = Physics2D(self.mass,self.max_vel,self.center_offset)
+        self.teleport(starting_pose)
+        x_vel = self.power*self.launch_force*math.cos(theta)
+        y_vel = self.power*self.launch_force*math.sin(theta)
+        self.physics.velocity = np.array([x_vel,y_vel])
+        self.logger.debug(f"Shell {id} spawned at position: {self.physics.position}")
+
+    def __str__(self) -> str:
+        entity_str = ''
+        entity_str += f'       Angle: {self.physics.theta:.2f}\n'
+        entity_str += f'    Position: {self.physics.position[0]:.2f} {self.physics.position[1]:.2f}\n'
+        entity_str += f'    Velocity: {self.physics.velocity[0]:.2f} {self.physics.velocity[1]:.2f}\n'
+        return entity_str
+
+    def load_config(self):
+        with open(f'{self.file_paths.entity_path}simple_shell.json','r') as fp:
+            self.config = json.load(fp)
+
+        self.name = self.config['name']
+        self.mass = self.config['mass']
+        self.max_vel = self.config['max_vel']
+        self.launch_force = self.config['launch_force']
+        
+        diameter = 6
+        radius = diameter/2
+        self.pixmap = QGraphicsEllipseItem(-radius,-radius,diameter,diameter)
+        r,g,b = randint(0,255), randint(0,255), randint(0,255)
+        color = QtGui.QColor(r,g,b)
+        black = QtGui.QColor(0,0,0)
+        self.pixmap.setPen(black)
+        self.pixmap.setBrush(color)
+        self.center_offset:np.ndarray = np.array([0,0])
+        self.pixmap.setTransformOriginPoint(0,0)
+
+        self.debug_items = []
+        # Angle indicator
+        self.debug_line = QGraphicsLineItem(20,0,125,0,self.pixmap)
+        self.debug_items.append(self.debug_line)
+
+    def set_debug_mode(self,enabled):
+        if enabled:
+            self.debug_line.show()
+        else:
+            self.debug_line.hide()
+
+    def teleport(self,pose: np.ndarray):
+        offset = pose.copy() - self.center_offset.copy()
+        self.physics.position = offset.copy()
+        self.physics.center_pose = self.physics.position + self.physics.center_offset
+        self.pixmap.setPos(offset[0],offset[1])
+
+    def rotate(self,angle):
+        self.physics.theta = angle
+        self.pixmap.setRotation(degrees(-angle))
+
+    def update(self,force,time):
+        resulting_force = self.steering_force + force
+        
+        self.physics.update(resulting_force,time)            
+        pose = self.physics.position.copy()
+        self.pixmap.setRotation(degrees(-self.physics.theta))
+        self.pixmap.setPos(pose[0],pose[1])
+
+        self.steering_force = np.zeros(2)
+
+class Tank(QWidget):
+    shell_fired_signal = pyqtSignal(str,Shell)
+
     def __init__(self,boundary_size,name,id,mass,max_vel,starting_pose):
         super().__init__()
         self.logger = initialize_logger()
@@ -89,96 +172,93 @@ class Tank(object):
         self.name = name
         self.config = None
         self.active_stats_str = ''
+        self.boundary_size = boundary_size
+        self.steering_force = np.zeros(2)
+        self.ground_angle: float = 0.0 #radians
+        self.touching_ground = False
+        self.barrel_angle = 0.0
+        self.power = 1.0
+        self.fuel_remaining = 500.0
+        self.hitpoints_remaining = 0.0
         self.load_config()
 
         self.physics:Physics2D = Physics2D(mass,max_vel,self.center_offset)
         self.teleport(starting_pose)
         self.logger.debug(f"Tank {id} spawned at position: {self.physics.position}")
 
-        self.boundary_size = boundary_size
-        self.steering_force = np.zeros(2)
-        self.ground_angle: float = 0.0 #radians
-        self.touching_ground = False
-        self.barrel_angle = 0.0
-        self.theta_prev = 0.0
-
     def __str__(self) -> str:
-        return f'{self.physics.theta:.2f}\n{self.physics.position}\n{self.physics.velocity}'
+        entity_str = ''
+        entity_str += f'       Angle: {self.physics.theta:.2f}\n'
+        entity_str += f'    Position: {self.physics.position[0]:.2f} {self.physics.position[1]:.2f}\n'
+        entity_str += f'    Velocity: {self.physics.velocity[0]:.2f} {self.physics.velocity[1]:.2f}\n'
+        entity_str += f'Barrel Angle: {self.barrel_angle:.2f}\n'
+        entity_str += f'       Power: {self.power:.2f}\n'
+        entity_str += f'   Fuel Left: {self.fuel_remaining:.2f}\n'
+        entity_str += f' Health Left: {self.hitpoints_remaining:.2f}\n'
+        return entity_str
 
     def load_config(self):
         with open(f'{self.file_paths.entity_path}tank.json','r') as fp:
             self.config = json.load(fp)
         
         # png_file = f"{self.file_paths.entity_path}{self.config['png_file']}"
-        self.hitpoints: int = int(self.config['hitpoints'])
-        self.search_radius: int = int(self.config['search_radius'])
+        self.hitpoints_remaining: float = float(self.config['hitpoints'])
 
-        
-        width = 50
-        height = 20
-        self.pixmap = QGraphicsRectItem(0,0,width,height)
+        # Tank color
         r,g,b = randint(0,255), randint(0,255), randint(0,255)
         color = QtGui.QColor(r,g,b)
         black = QtGui.QColor(0,0,0)
+        
+        # Dome
+        d = 24
+        r = d/2
+        self.pixmap = QGraphicsEllipseItem(-r,-r,d,d)
         self.pixmap.setPen(black)
         self.pixmap.setBrush(color)
-        # x = self.pixmap.size().width()/2
-        # y = self.pixmap.size().height()/2
-        x = width/2
-        y = height/2
-        # self.center_offset:np.ndarray = np.array([self.pixmap.size().width()/2,self.pixmap.size().height()/2])
-        self.center_offset:np.ndarray = np.array([x,y])
-        self.pixmap.setTransformOriginPoint(x,y)
+        self.center_offset:np.ndarray = np.array([0,0])
+        self.pixmap.setTransformOriginPoint(0,0)
 
-        # Dome
-        r = 24
-        self.dome = QGraphicsEllipseItem(x-r/2,-r/2,r,r,self.pixmap)
-        self.dome.setPen(black)
-        self.dome.setBrush(color)
+        # Body
+        width = 50
+        height = 20
+        self.body = QGraphicsRectItem(-width/2,0,width,height,self.pixmap)
+        self.body.setPen(black)
+        self.body.setBrush(color)
 
-        # barrel
-        self.barrel = QGraphicsRectItem(x,-r/3,25,6,self.pixmap)
+        # Barrel
+        self.barrel_len = 25
+        self.barrel_offset = -9
+        self.barrel_center = 3
+        self.barrel = QGraphicsRectItem(0,self.barrel_offset,self.barrel_len,5,self.pixmap)
         self.barrel.setPen(black)
         self.barrel.setBrush(color)
-        self.barrel.setTransformOriginPoint(x,-r/6)
+        self.barrel.setTransformOriginPoint(0,self.barrel_offset+self.barrel_center)
+
+        # Name text
+        self.name_text = QGraphicsTextItem(self.name,self.pixmap)
+        self.name_text.setPos(10,-75)
+        self.name_text.setFont(QtGui.QFont("Arial",12))
+
+        # Health Bar
+        self.health_bar = QGraphicsRectItem(self.pixmap)
+        self.update_health_bar()
 
         # Current player display
         self.current_player_stats = QGraphicsTextItem(self.active_stats_str,self.pixmap)
-        self.current_player_stats.setPos(20,30)
+        self.current_player_stats.setPos(-20,30)
         self.current_player_stats.setFont(QtGui.QFont("Arial",12))
         self.set_current_player(False)
         
         self.debug_items = []
         # Angle indicator
-        self.debug_line = QGraphicsLineItem(x+20,y,x+125,y,self.pixmap)
+        self.debug_line = QGraphicsLineItem(width/2+10,0,125,0,self.pixmap)
         self.debug_items.append(self.debug_line)
-        # Search radius
-        self.debug_search_radius = QGraphicsEllipseItem(x-self.search_radius/2,y-self.search_radius/2,self.search_radius,self.search_radius,self.pixmap)
-        self.debug_items.append(self.debug_search_radius)
-        # Bounding rectangle
-        self.debug_pose = QGraphicsRectItem(0,0,width,height,self.pixmap)
-        pen = QtGui.QPen()
-        pen.setWidth(2)
-        pen.setColor(QtGui.QColor(0,0,0))
-        self.debug_pose.setPen(pen)
-        self.debug_items.append(self.debug_pose)
-        # Title
-        self.debug_text = QGraphicsTextItem(str(self.name),self.pixmap)
-        self.debug_text.setPos(0,-20)
-        self.debug_text.setFont(QtGui.QFont("Arial",12))
-        self.debug_items.append(self.debug_text)
     
     def set_debug_mode(self,enabled):
         if enabled:
             self.debug_line.show()
-            self.debug_search_radius.show()
-            self.debug_pose.show()
-            self.debug_text.show()
         else:
             self.debug_line.hide()
-            self.debug_search_radius.hide()
-            self.debug_pose.hide()
-            self.debug_text.hide()
     
     def set_current_player(self,state):
         if state:
@@ -197,36 +277,46 @@ class Tank(object):
         self.pixmap.setRotation(degrees(-angle))
 
     def rotate_barrel(self,direction):
-        angle = self.barrel_angle + direction * 0.5
+        angle = self.barrel_angle + direction * 0.75
+        if angle < -180.0:
+            angle = -180.0
+        elif angle > 0.0:
+            angle = 0.0
         self.barrel.setRotation(angle)
         self.barrel_angle = angle
 
+    def update_health_bar(self):
+        self.health_bar.setRect(0,-40,self.hitpoints_remaining*.25,4)
+        self.health_bar.setBrush(QtGui.QColor(0,255,0))
+
     def drive(self,direction):
+        if self.fuel_remaining <= 0:
+            return
+        
         if self.touching_ground:
             self.steering_force = np.array([100.0*direction,-500.0])
         else:
             self.steering_force = np.array([100.0*direction,0.0])
 
+        self.fuel_remaining -= 1.0
+    
+    def fire_shell(self):
+        theta = 1*(-1*self.physics.theta+math.radians(self.barrel_angle))
+        print(theta)
+        x_comp = self.barrel_len*math.cos(theta)
+        y_comp = self.barrel_len*math.sin(theta)
+        barrel_tip = np.array([self.physics.position[0] + x_comp, self.physics.position[1]+self.barrel_offset+self.barrel_center + y_comp])
+        shell = Shell(uuid.uuid4(),barrel_tip,theta,self.power)
+        self.shell_fired_signal.emit(self.name,shell)
+
     def update(self,force,time):
         resulting_force = self.steering_force + force
         
-        self.physics.update(resulting_force,time)
-        self.theta_prev = self.physics.theta
-
-        # Wrap position within the boundary size
-        if self.physics.center_pose[0] > self.boundary_size[0]:
-            self.teleport(np.array([0.0,self.physics.position[1]]))
-        elif self.physics.center_pose[0] < 0.0:
-            self.teleport(np.array([self.boundary_size[0],self.physics.position[1]]))
-        elif self.physics.center_pose[1] > self.boundary_size[1]:
-            self.teleport(np.array([self.physics.position[0],0.0]))
-        elif self.physics.center_pose[1] < 0.0:
-            self.teleport(np.array([self.physics.position[0],self.boundary_size[1]]))
-            
+        self.physics.update(resulting_force,time)            
         pose = self.physics.position.copy()
         self.pixmap.setRotation(degrees(-self.physics.theta))
         self.pixmap.setPos(pose[0],pose[1])
 
         self.steering_force = np.zeros(2)
-
         self.current_player_stats.setPlainText(str(self))
+

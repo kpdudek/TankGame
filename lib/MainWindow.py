@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowTitle('Tank Game')
         
-        self.boundary_size = np.array([1600.0,900.0]) #[1500,800]
+        self.boundary_size = np.array([1600.0,700.0]) #[1500,800]
         window_size = np.array([1850.0,950.0])
         self.screen_width, self.screen_height = screen_resolution.width(), screen_resolution.height()
         offset_x = int((self.screen_width-window_size[0])/2)
@@ -155,31 +155,33 @@ class MainWindow(QMainWindow):
     
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
-        if key == Qt.Key.Key_Escape:
+        if key == Qt.Key_Escape:
             self.shutdown()
-        elif key == Qt.Key.Key_C:
+        elif key == Qt.Key_C:
             self.scene.boid_count_display.setPos(0,0)
             self.camera.resetTransform()
-        elif key == Qt.Key.Key_P:
+        elif key == Qt.Key_P:
             if self.paused:
                 self.logger.info('Resuming...')
                 self.paused = False
             else:
                 self.logger.info('Pausing...')
                 self.paused = True
-        elif key == Qt.Key.Key_Space:
+        elif key == Qt.Key_Space:
             if self.debug_mode:
                 self.settings.ui.debug_mode_checkbox.setChecked(False)
             else:
                 self.settings.ui.debug_mode_checkbox.setChecked(True)
-        elif key == Qt.Key.Key_V:
+        elif key == Qt.Key_V:
             self.frame_idx += 1
-        elif key == Qt.Key.Key_N:
+        elif key == Qt.Key_N:
             self.scene.tanks[self.current_player_idx].set_current_player(False)
             self.current_player_idx += 1
             if self.current_player_idx > len(self.scene.tanks)-1:
                 self.current_player_idx = 0
             self.scene.tanks[self.current_player_idx].set_current_player(True)
+        elif key == Qt.Key_F:
+            self.scene.tanks[self.current_player_idx].fire_shell()
         elif not event.isAutoRepeat():
             self.keys_pressed.append(key)
     
@@ -221,33 +223,33 @@ class MainWindow(QMainWindow):
         scene_y = self.scene.sceneRect().height()
         
         for key in self.keys_pressed:
-            if key == Qt.Key.Key_W:
+            if key == Qt.Key_W:
                 if camera_y > scene_y*scale_y:
                     return
                 self.camera.translate(0,cam_speed)
-            elif key == Qt.Key.Key_S:
+            elif key == Qt.Key_S:
                 if camera_y > scene_y*scale_y:
                     return
                 self.camera.translate(0,-cam_speed)
-            elif key == Qt.Key.Key_A:
+            elif key == Qt.Key_A:
                 if camera_x > scene_x*scale_x:
                     return
                 self.camera.translate(cam_speed,0)
-            elif key == Qt.Key.Key_D:
+            elif key == Qt.Key_D:
                 if camera_x > scene_x*scale_x:
                     return
                 self.camera.translate(-cam_speed,0)
-            elif key == Qt.Key.Key_Z:
+            elif key == Qt.Key_Z:
                 self.camera.scale(1.0-zoom_speed,1.0-zoom_speed)
-            elif key == Qt.Key.Key_X:
+            elif key == Qt.Key_X:
                 self.camera.scale(1.0+zoom_speed,1.0+zoom_speed)
-            elif key == Qt.Key.Key_Up:
+            elif key == Qt.Key_Up:
                 self.scene.tanks[self.current_player_idx].rotate_barrel(-1)
-            elif key == Qt.Key.Key_Down:
+            elif key == Qt.Key_Down:
                 self.scene.tanks[self.current_player_idx].rotate_barrel(1)
-            elif key == Qt.Key.Key_Left:
+            elif key == Qt.Key_Left:
                 self.scene.tanks[self.current_player_idx].drive(-1)
-            elif key == Qt.Key.Key_Right:
+            elif key == Qt.Key_Right:
                 self.scene.tanks[self.current_player_idx].drive(1)
     
     def set_debug_mode(self,enabled):

@@ -37,14 +37,17 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
    <property name="topMargin">
     <number>3</number>
    </property>
    <property name="rightMargin">
-    <number>9</number>
+    <number>0</number>
    </property>
    <property name="bottomMargin">
-    <number>9</number>
+    <number>0</number>
    </property>
    <item row="2" column="0" colspan="3">
     <widget class="QPushButton" name="expand_collapse_settings_button">
@@ -215,7 +218,7 @@ font:  bold 10pt;</string>
                <double>10.000000000000000</double>
               </property>
               <property name="value">
-               <double>50.000000000000000</double>
+               <double>75.000000000000000</double>
               </property>
              </widget>
             </item>

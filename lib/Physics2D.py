@@ -28,8 +28,8 @@ class Physics2D(object):
         self.velocity = self.velocity + delta_v
         self.position = self.position + (self.velocity * time)
         self.center_pose = self.position.copy() + self.center_offset.copy()
-        if sum(self.velocity) > 0.001:
-            self.theta = edge_angle(np.zeros(2),self.velocity.copy(),np.array([100.0,0.0]))
+        # if sum(self.velocity) > 0.001:
+        #     self.theta = edge_angle(np.zeros(2),self.velocity.copy(),np.array([100.0,0.0]))
         
         # If the velocity exceeds the maximum magnitude, scale the velocity vector to match its value
         vel_mag = np.linalg.norm(self.velocity)
