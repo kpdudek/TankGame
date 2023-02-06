@@ -5,9 +5,9 @@
     "maintain_aspect":true,
     "pose":[0.0,0.0],
     "mass":1.0,
-    "max_vel": 100,
+    "max_vel": 200,
     "damage": 20,
     "blast_radius": 50,
     "armour_penetration": 0.2,
-    "launch_force": 1000
+    "launch_force": 200
 }

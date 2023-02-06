@@ -180,8 +180,6 @@ class MainWindow(QMainWindow):
             if self.current_player_idx > len(self.scene.tanks)-1:
                 self.current_player_idx = 0
             self.scene.tanks[self.current_player_idx].set_current_player(True)
-        elif key == Qt.Key_F:
-            self.scene.tanks[self.current_player_idx].fire_shell()
         elif not event.isAutoRepeat():
             self.keys_pressed.append(key)
     
@@ -244,13 +242,25 @@ class MainWindow(QMainWindow):
             elif key == Qt.Key_X:
                 self.camera.scale(1.0+zoom_speed,1.0+zoom_speed)
             elif key == Qt.Key_Up:
+                if len(self.scene.tanks) <= 0:
+                    return
                 self.scene.tanks[self.current_player_idx].rotate_barrel(-1)
             elif key == Qt.Key_Down:
+                if len(self.scene.tanks) <= 0:
+                    return
                 self.scene.tanks[self.current_player_idx].rotate_barrel(1)
             elif key == Qt.Key_Left:
+                if len(self.scene.tanks) <= 0:
+                    return
                 self.scene.tanks[self.current_player_idx].drive(-1)
             elif key == Qt.Key_Right:
+                if len(self.scene.tanks) <= 0:
+                    return
                 self.scene.tanks[self.current_player_idx].drive(1)
+            elif key == Qt.Key_F:
+                if len(self.scene.tanks) <= 0:
+                    return
+                self.scene.tanks[self.current_player_idx].fire_shell()
     
     def set_debug_mode(self,enabled):
         self.scene.set_debug_mode(enabled)

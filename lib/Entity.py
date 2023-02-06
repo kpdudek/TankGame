@@ -94,6 +94,7 @@ class Shell(QWidget):
         self.ground_angle: float = 0.0 #radians
         self.touching_ground = False
         self.power = power
+        self.damage = 0.0
         self.load_config()
 
         self.physics:Physics2D = Physics2D(self.mass,self.max_vel,self.center_offset)
@@ -118,6 +119,7 @@ class Shell(QWidget):
         self.mass = self.config['mass']
         self.max_vel = self.config['max_vel']
         self.launch_force = self.config['launch_force']
+        self.damage = self.config['damage']
         
         diameter = 6
         radius = diameter/2
@@ -178,7 +180,7 @@ class Tank(QWidget):
         self.touching_ground = False
         self.barrel_angle = 0.0
         self.power = 1.0
-        self.fuel_remaining = 500.0
+        self.fuel_remaining = 0.0
         self.hitpoints_remaining = 0.0
         self.load_config()
 
@@ -188,7 +190,7 @@ class Tank(QWidget):
 
     def __str__(self) -> str:
         entity_str = ''
-        entity_str += f'       Angle: {self.physics.theta:.2f}\n'
+        entity_str += f'       Angle: {math.degrees(self.physics.theta):.2f}\n'
         entity_str += f'    Position: {self.physics.position[0]:.2f} {self.physics.position[1]:.2f}\n'
         entity_str += f'    Velocity: {self.physics.velocity[0]:.2f} {self.physics.velocity[1]:.2f}\n'
         entity_str += f'Barrel Angle: {self.barrel_angle:.2f}\n'
@@ -203,6 +205,7 @@ class Tank(QWidget):
         
         # png_file = f"{self.file_paths.entity_path}{self.config['png_file']}"
         self.hitpoints_remaining: float = float(self.config['hitpoints'])
+        self.fuel_remaining: float = float(self.config['fuel_level'])
 
         # Tank color
         r,g,b = randint(0,255), randint(0,255), randint(0,255)
@@ -302,12 +305,17 @@ class Tank(QWidget):
     
     def fire_shell(self):
         theta = 1*(-1*self.physics.theta+math.radians(self.barrel_angle))
-        print(theta)
         x_comp = self.barrel_len*math.cos(theta)
         y_comp = self.barrel_len*math.sin(theta)
         barrel_tip = np.array([self.physics.position[0] + x_comp, self.physics.position[1]+self.barrel_offset+self.barrel_center + y_comp])
         shell = Shell(uuid.uuid4(),barrel_tip,theta,self.power)
         self.shell_fired_signal.emit(self.name,shell)
+
+    def hit_by(self,shell: Shell):
+        self.hitpoints_remaining -= shell.damage
+        if self.hitpoints_remaining <= 0:
+            self.hitpoints_remaining = 0.0
+        self.update_health_bar()
 
     def update(self,force,time):
         resulting_force = self.steering_force + force

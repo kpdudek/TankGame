@@ -27,7 +27,6 @@ def main():
     except:
         logger.warning(f'Unhandled exception.')
     main_window.settings.reset_simulation()
-    # main_window.scene.tanks[0].set_current_player(True)
     
     app.exec_()
     logger.info("Game ended.")
