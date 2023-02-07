@@ -1,5 +1,5 @@
 {
-    "name":"simple_shell",
+    "type":"simple_shell",
     "png_file":"",
     "png_scale":[1.0,1.0],
     "maintain_aspect":true,
@@ -9,5 +9,7 @@
     "damage": 20,
     "blast_radius": 50,
     "armour_penetration": 0.2,
-    "launch_force": 200
+    "launch_force": 200,
+    "fire_rate": 1,
+    "capacity": 5
 }

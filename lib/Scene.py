@@ -99,7 +99,7 @@ class Scene(QGraphicsScene):
         self.update_window_text()
     
     def shell_fired(self,tank_name: str,shell: Shell):
-        self.logger.info(f"Tank [{tank_name}] fired shell [{shell.name}]")
+        self.logger.info(f"Tank [{tank_name}] fired shell [{shell.type}]")
         shell.set_debug_mode(self.debug_mode)
         self.addItem(shell.pixmap)
         self.shells.append(shell)
@@ -116,14 +116,14 @@ class Scene(QGraphicsScene):
             for item in self.collidingItems(shell.pixmap):
                 if item in self.tank_pixmaps:
                     idx = self.tank_pixmaps.index(item)
-                    self.logger.info(f'Shell [{shell.name}] collided with tank [{self.tanks[idx].name}]')
+                    self.logger.info(f'Shell [{shell.type}] collided with tank [{self.tanks[idx].name}]')
                     self.tanks[idx].hit_by(shell)
                     self.delete = True
                     if self.tanks[idx].hitpoints_remaining <= 0:
                         self.removeItem(item)
                         self.tanks.pop(idx)
                 elif item == self.terrain.pixmap:
-                    self.logger.info(f'Shell [{shell.name}] collided with map [{self.terrain.name}]')
+                    self.logger.info(f'Shell [{shell.type}] collided with map [{self.terrain.name}]')
                     self.delete = True
             if self.delete:
                 self.removeItem(shell.pixmap)

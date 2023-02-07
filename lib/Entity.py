@@ -12,8 +12,8 @@ from random import randint
 from math import degrees
 from PyQt5 import QtGui
 import numpy as np
+import math, time
 import json, uuid
-import math
 
 class Map(object):
     def __init__(self,boundary_size,name,id):
@@ -106,20 +106,22 @@ class Shell(QWidget):
 
     def __str__(self) -> str:
         entity_str = ''
-        entity_str += f'       Angle: {self.physics.theta:.2f}\n'
-        entity_str += f'    Position: {self.physics.position[0]:.2f} {self.physics.position[1]:.2f}\n'
-        entity_str += f'    Velocity: {self.physics.velocity[0]:.2f} {self.physics.velocity[1]:.2f}\n'
+        entity_str += f'   Angle: {self.physics.theta:.2f}\n'
+        entity_str += f'Position: {self.physics.position[0]:.2f} {self.physics.position[1]:.2f}\n'
+        entity_str += f'Velocity: {self.physics.velocity[0]:.2f} {self.physics.velocity[1]:.2f}\n'
         return entity_str
 
     def load_config(self):
         with open(f'{self.file_paths.entity_path}simple_shell.json','r') as fp:
             self.config = json.load(fp)
 
-        self.name = self.config['name']
+        self.type = self.config['type']
         self.mass = self.config['mass']
         self.max_vel = self.config['max_vel']
         self.launch_force = self.config['launch_force']
         self.damage = self.config['damage']
+        self.fire_rate = self.config['fire_rate']
+        self.capacity = self.config['capacity']
         
         diameter = 6
         radius = diameter/2
@@ -184,6 +186,10 @@ class Tank(QWidget):
         self.hitpoints_remaining = 0.0
         self.load_config()
 
+        self.shell_type = None
+        self.shots_remaining = 0
+        self.t_shot_prev = 0.0
+
         self.physics:Physics2D = Physics2D(mass,max_vel,self.center_offset)
         self.teleport(starting_pose)
         self.logger.debug(f"Tank {id} spawned at position: {self.physics.position}")
@@ -197,6 +203,7 @@ class Tank(QWidget):
         entity_str += f'       Power: {self.power:.2f}\n'
         entity_str += f'   Fuel Left: {self.fuel_remaining:.2f}\n'
         entity_str += f' Health Left: {self.hitpoints_remaining:.2f}\n'
+        entity_str += f'  Shots Left: {self.shots_remaining}\n'
         return entity_str
 
     def load_config(self):
@@ -265,6 +272,7 @@ class Tank(QWidget):
     
     def set_current_player(self,state):
         if state:
+            self.reload('simple_shell')
             self.current_player_stats.show()
         else:
             self.current_player_stats.hide()
@@ -303,13 +311,25 @@ class Tank(QWidget):
 
         self.fuel_remaining -= 1.0
     
+    def reload(self,shell_type):
+        self.shell_type = shell_type
+        if shell_type == 'simple_shell':
+            self.shots_remaining = 5#Shell().capacity
+        self.t_shot_prev = time.time()
+
     def fire_shell(self):
-        theta = 1*(-1*self.physics.theta+math.radians(self.barrel_angle))
-        x_comp = self.barrel_len*math.cos(theta)
-        y_comp = self.barrel_len*math.sin(theta)
-        barrel_tip = np.array([self.physics.position[0] + x_comp, self.physics.position[1]+self.barrel_offset+self.barrel_center + y_comp])
-        shell = Shell(uuid.uuid4(),barrel_tip,theta,self.power)
-        self.shell_fired_signal.emit(self.name,shell)
+        t = time.time()
+        fire_rate = 1.0/2.0
+        if self.shots_remaining > 0 and t-self.t_shot_prev > fire_rate:
+            theta = 1*(-1*self.physics.theta+math.radians(self.barrel_angle))
+            x_comp = self.barrel_len*math.cos(theta)
+            y_comp = self.barrel_len*math.sin(theta)
+            barrel_tip = np.array([self.physics.position[0] + x_comp, self.physics.position[1]+self.barrel_offset+self.barrel_center + y_comp])
+            shell = Shell(uuid.uuid4(),barrel_tip,theta,self.power)
+            self.shell_fired_signal.emit(self.name,shell)
+
+            self.shots_remaining -= 1
+            self.t_shot_prev = t
 
     def hit_by(self,shell: Shell):
         self.hitpoints_remaining -= shell.damage
