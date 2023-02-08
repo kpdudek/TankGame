@@ -34,7 +34,6 @@ class MainWindow(QMainWindow):
         
         self.selected_offset: np.ndarray = np.zeros(2)
         self.selected_tanks: List[Tank] = []
-        self.current_player_idx = 0
         self.debug_mode = debug_mode
         self.keys_pressed = []
         self.loop_fps = 60.0
@@ -100,8 +99,8 @@ class MainWindow(QMainWindow):
                     tank.physics.lock = True
             if len(self.selected_tanks) > 0:
                 return
-            pose_scene = self.camera.mapToScene(pose[0],pose[1])
-            pose_scene = np.array([pose_scene.x(),pose_scene.y()])
+            # pose_scene = self.camera.mapToScene(pose[0],pose[1])
+            # pose_scene = np.array([pose_scene.x(),pose_scene.y()])
             max_vel = self.settings.ui.max_speed_spinbox.value()
             self.scene.spawn_tank(max_vel,pose_scene)
             self.scene.tanks[-1].set_debug_mode(self.debug_mode)
@@ -109,9 +108,7 @@ class MainWindow(QMainWindow):
         elif self.button == 2: # Right click
             for tank in self.scene.tanks:
                 if tank.pixmap.isUnderMouse():
-                    self.scene.removeItem(tank.pixmap)
-                    self.scene.tanks.remove(tank)
-                    self.scene.boid_count_display.setPlainText(f"Tanks: {len(self.scene.tanks)}")
+                    self.scene.remove_tank(tank)
         elif self.button == 4: # Wheel click
             pass
 
@@ -125,8 +122,7 @@ class MainWindow(QMainWindow):
                 for tank in self.selected_tanks:
                     tank.teleport(pose_scene+self.selected_offset)
                 return
-            theta = edge_angle(np.zeros(2),pose_scene-self.mouse_press,np.array([100.0,0.0]))
-            self.scene.tanks[-1].rotate(theta)
+            # theta = edge_angle(np.zeros(2),pose_scene-self.mouse_press,np.array([100.0,0.0]))
         elif self.button == 2: # Right click
            pass
         elif self.button == 4: # Wheel click
@@ -152,6 +148,7 @@ class MainWindow(QMainWindow):
         elif self.button == 4: # Wheel click
             pass
         self.button = None
+        self.selected_tanks: List[Tank] = []
     
     def keyPressEvent(self, event: QtGui.QKeyEvent):
         key = event.key()
@@ -175,11 +172,13 @@ class MainWindow(QMainWindow):
         elif key == Qt.Key_V:
             self.frame_idx += 1
         elif key == Qt.Key_N:
-            self.scene.tanks[self.current_player_idx].set_current_player(False)
-            self.current_player_idx += 1
-            if self.current_player_idx > len(self.scene.tanks)-1:
-                self.current_player_idx = 0
-            self.scene.tanks[self.current_player_idx].set_current_player(True)
+            if len(self.scene.tanks) <= 0:
+                return
+            self.scene.tanks[self.scene.current_player_idx].set_current_player(False)
+            self.scene.current_player_idx += 1
+            if self.scene.current_player_idx > len(self.scene.tanks)-1:
+                self.scene.current_player_idx = 0
+            self.scene.tanks[self.scene.current_player_idx].set_current_player(True)
         elif not event.isAutoRepeat():
             self.keys_pressed.append(key)
     
@@ -244,23 +243,23 @@ class MainWindow(QMainWindow):
             elif key == Qt.Key_Up:
                 if len(self.scene.tanks) <= 0:
                     return
-                self.scene.tanks[self.current_player_idx].rotate_barrel(-1)
+                self.scene.tanks[self.scene.current_player_idx].rotate_barrel(-1)
             elif key == Qt.Key_Down:
                 if len(self.scene.tanks) <= 0:
                     return
-                self.scene.tanks[self.current_player_idx].rotate_barrel(1)
+                self.scene.tanks[self.scene.current_player_idx].rotate_barrel(1)
             elif key == Qt.Key_Left:
                 if len(self.scene.tanks) <= 0:
                     return
-                self.scene.tanks[self.current_player_idx].drive(-1)
+                self.scene.tanks[self.scene.current_player_idx].drive(-1)
             elif key == Qt.Key_Right:
                 if len(self.scene.tanks) <= 0:
                     return
-                self.scene.tanks[self.current_player_idx].drive(1)
+                self.scene.tanks[self.scene.current_player_idx].drive(1)
             elif key == Qt.Key_F:
                 if len(self.scene.tanks) <= 0:
                     return
-                self.scene.tanks[self.current_player_idx].fire_shell()
+                self.scene.tanks[self.scene.current_player_idx].fire_shell()
     
     def set_debug_mode(self,enabled):
         self.scene.set_debug_mode(enabled)

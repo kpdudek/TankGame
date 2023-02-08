@@ -84,11 +84,12 @@ class Map(object):
         return angle
 
 class Shell(QWidget):
-    def __init__(self,id,starting_pose,theta,power):
+    def __init__(self,id,starting_pose,theta,power,parent_tank):
         super().__init__()
         self.logger = initialize_logger()
         self.file_paths = FilePaths()
         self.id = id
+        self.parent_tank: Tank = parent_tank
         self.config = None
         self.steering_force = np.zeros(2)
         self.ground_angle: float = 0.0 #radians
@@ -166,7 +167,7 @@ class Shell(QWidget):
         self.steering_force = np.zeros(2)
 
 class Tank(QWidget):
-    shell_fired_signal = pyqtSignal(str,Shell)
+    shell_fired_signal = pyqtSignal(Shell)
 
     def __init__(self,boundary_size,name,id,mass,max_vel,starting_pose):
         super().__init__()
@@ -305,7 +306,10 @@ class Tank(QWidget):
             return
         
         if self.touching_ground:
-            self.steering_force = np.array([100.0*direction,-500.0])
+            drive_force = 5000
+            drive_x = math.cos(self.ground_angle) * drive_force
+            drive_y = -1 * math.sin(self.ground_angle) * drive_force
+            self.steering_force = direction * np.array([drive_x,drive_y])
         else:
             self.steering_force = np.array([100.0*direction,0.0])
 
@@ -325,8 +329,8 @@ class Tank(QWidget):
             x_comp = self.barrel_len*math.cos(theta)
             y_comp = self.barrel_len*math.sin(theta)
             barrel_tip = np.array([self.physics.position[0] + x_comp, self.physics.position[1]+self.barrel_offset+self.barrel_center + y_comp])
-            shell = Shell(uuid.uuid4(),barrel_tip,theta,self.power)
-            self.shell_fired_signal.emit(self.name,shell)
+            shell = Shell(uuid.uuid4(),barrel_tip,theta,self.power,self)
+            self.shell_fired_signal.emit(shell)
 
             self.shots_remaining -= 1
             self.t_shot_prev = t
@@ -342,9 +346,8 @@ class Tank(QWidget):
         
         self.physics.update(resulting_force,time)            
         pose = self.physics.position.copy()
-        self.pixmap.setRotation(degrees(-self.physics.theta))
+        # self.pixmap.setRotation(degrees(-self.physics.theta))
         self.pixmap.setPos(pose[0],pose[1])
 
         self.steering_force = np.zeros(2)
         self.current_player_stats.setPlainText(str(self))
-

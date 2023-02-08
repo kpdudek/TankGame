@@ -22,12 +22,7 @@ class Scene(QGraphicsScene):
 
         self.debug_mode = False
         self.boundary_size = boundary_size
-
-        self.separation_multiplier = 0.0
-        self.cohesion_multiplier = 0.0
-        self.align_multiplier = 0.0
-        self.x_offset = 0
-        self.y_offset = 0
+        self.current_player_idx = 0
 
         self.setBackgroundBrush(QBrush(QColor('#5ADCEC')))
 
@@ -98,12 +93,21 @@ class Scene(QGraphicsScene):
         self.addItem(tank.pixmap)
         self.update_window_text()
     
-    def shell_fired(self,tank_name: str,shell: Shell):
-        self.logger.info(f"Tank [{tank_name}] fired shell [{shell.type}]")
+    def shell_fired(self,shell: Shell):
+        self.logger.info(f"Tank [{shell.parent_tank.name}] fired shell [{shell.type}]")
         shell.set_debug_mode(self.debug_mode)
         self.addItem(shell.pixmap)
         self.shells.append(shell)
         self.shell_pixmaps.append(shell.pixmap)
+
+    def remove_tank(self,tank: Tank):
+        self.removeItem(tank.pixmap)
+        idx = self.tanks.index(tank)
+        self.tanks.pop(idx)
+        self.tank_pixmaps.pop(idx)
+        if len(self.tanks) == 1:
+            self.current_player_idx = 0
+        self.boid_count_display.setPlainText(f"Tanks: {len(self.tanks)}")
 
     def update(self,time):
         self.gravity = np.array([0,50.8])
@@ -120,8 +124,7 @@ class Scene(QGraphicsScene):
                     self.tanks[idx].hit_by(shell)
                     self.delete = True
                     if self.tanks[idx].hitpoints_remaining <= 0:
-                        self.removeItem(item)
-                        self.tanks.pop(idx)
+                        self.remove_tank(self.tanks[idx])
                 elif item == self.terrain.pixmap:
                     self.logger.info(f'Shell [{shell.type}] collided with map [{self.terrain.name}]')
                     self.delete = True
