@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 from lib.Utils import FilePaths, initialize_logger, set_logging_level
+from lib.Scene import Scene, SceneData
 from PyQt5.QtWidgets import QWidget
 from ui.Settings import Ui_Settings
 from PyQt5.QtCore import pyqtSignal
 from lib.Camera import Camera
-from lib.Scene import Scene
 
 class Settings(QWidget):
     set_debug_mode_signal = pyqtSignal(bool)
@@ -28,6 +28,11 @@ class Settings(QWidget):
         self.ui.debug_mode_checkbox.stateChanged.connect(self.toggle_debug_mode)
         self.ui.reset_button.clicked.connect(self.reset_simulation)
 
+    def update_scene_data(self,scene_data:SceneData):
+        self.ui.tank_count_label.setText(str(scene_data.tank_count))
+        self.ui.shell_count_label.setText(str(scene_data.shell_count))
+        self.ui.current_player_label.setText(str(scene_data.current_player))
+        
     def toggle_debug_mode(self):
         if self.ui.debug_mode_checkbox.isChecked():
             self.set_debug_mode_signal.emit(True)

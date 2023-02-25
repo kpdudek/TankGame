@@ -230,9 +230,9 @@ class Tank(QWidget):
         self.pixmap.setTransformOriginPoint(0,0)
 
         # Body
-        width = 50
+        self.body_width = 50
         height = 20
-        self.body = QGraphicsRectItem(-width/2,0,width,height,self.pixmap)
+        self.body = QGraphicsRectItem(-self.body_width/2,0,self.body_width,height,self.pixmap)
         self.body.setPen(black)
         self.body.setBrush(color)
 
@@ -247,7 +247,7 @@ class Tank(QWidget):
 
         # Name text
         self.name_text = QGraphicsTextItem(self.name,self.pixmap)
-        self.name_text.setPos(10,-75)
+        self.name_text.setPos(-self.body_width/2,-75)
         self.name_text.setFont(QtGui.QFont("Arial",12))
 
         # Health Bar
@@ -262,7 +262,7 @@ class Tank(QWidget):
         
         self.debug_items = []
         # Angle indicator
-        self.debug_line = QGraphicsLineItem(width/2+10,0,125,0,self.pixmap)
+        self.debug_line = QGraphicsLineItem(self.body_width/2+10,0,125,0,self.pixmap)
         self.debug_items.append(self.debug_line)
     
     def set_debug_mode(self,enabled):
@@ -298,7 +298,7 @@ class Tank(QWidget):
         self.barrel_angle = angle
 
     def update_health_bar(self):
-        self.health_bar.setRect(0,-40,self.hitpoints_remaining*.25,4)
+        self.health_bar.setRect(-self.body_width/2,-40,self.hitpoints_remaining*.25,4)
         self.health_bar.setBrush(QtGui.QColor(0,255,0))
 
     def drive(self,direction):

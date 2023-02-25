@@ -405,48 +405,6 @@ font:  bold 10pt;</string>
          <property name="verticalSpacing">
           <number>6</number>
          </property>
-         <item row="4" column="1">
-          <widget class="QLabel" name="current_player_label">
-           <property name="text">
-            <string>...</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>150</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>Current Shell:</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLabel" name="shell_name_label">
-           <property name="text">
-            <string>...</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="0" colspan="2">
           <widget class="QLabel" name="label_6">
            <property name="minimumSize">
@@ -473,7 +431,14 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
-         <item row="4" column="0">
+         <item row="4" column="1">
+          <widget class="QLabel" name="tank_count_label">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
           <widget class="QLabel" name="label_2">
            <property name="minimumSize">
             <size>
@@ -495,6 +460,37 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="current_player_label">
+           <property name="text">
+            <string>...</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Number of Tanks:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label">
+           <property name="text">
+            <string>Number of Shells:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLabel" name="shell_count_label">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -507,14 +503,14 @@ font:  bold 10pt;</string>
          <enum>QFrame::Plain</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="2" column="0" colspan="2">
+         <item row="3" column="0" colspan="2">
           <widget class="QPushButton" name="fire_button">
            <property name="text">
             <string>Fire</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item row="1" column="1">
           <widget class="QPushButton" name="barrel_up_button">
            <property name="text">
             <string>Barrel Up</string>
@@ -524,7 +520,7 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
+         <item row="1" column="0">
           <widget class="QPushButton" name="barrel_down_button">
            <property name="text">
             <string>Barrel Down</string>
@@ -534,7 +530,7 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
+         <item row="0" column="0">
           <widget class="QPushButton" name="drive_left_button">
            <property name="text">
             <string>Drive Left</string>
@@ -544,13 +540,27 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="0" column="1">
           <widget class="QPushButton" name="drive_right_button">
            <property name="text">
             <string>Drive Right</string>
            </property>
            <property name="autoRepeat">
             <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QPushButton" name="power_down_button">
+           <property name="text">
+            <string>Power Down</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QPushButton" name="power_up_button">
+           <property name="text">
+            <string>Power Up</string>
            </property>
           </widget>
          </item>

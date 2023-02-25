@@ -12,8 +12,15 @@ from typing import List
 import numpy as np
 import uuid
 
+class SceneData():
+    def __init__(self):
+        self.tank_count:int = 0
+        self.shell_count:int = 0
+        self.current_player:str = ''
+
 class Scene(QGraphicsScene):
     shutdown_signal = QtCore.pyqtSignal()
+    scene_data_signal = QtCore.pyqtSignal(SceneData)
 
     def __init__(self,boundary_size):
         super().__init__()
@@ -25,6 +32,14 @@ class Scene(QGraphicsScene):
         self.current_player_idx = 0
 
         self.setBackgroundBrush(QBrush(QColor('#5ADCEC')))
+
+        self.scene_data = SceneData()
+
+    def send_scene_data(self):
+        self.scene_data.tank_count = len(self.tanks)
+        self.scene_data.shell_count = len(self.shells)
+        # self.scene_data.current_player = self.tanks[self.]
+        self.scene_data_signal.emit(self.scene_data)
 
     def initialize_scene(self,num_tanks,max_vel):        
         self.logger.info(f'Initializing scene with {num_tanks} tanks...')
@@ -67,6 +82,8 @@ class Scene(QGraphicsScene):
         for i in range(self.number_of_tanks):
             self.spawn_tank(max_vel,np.array([x_offset,y_offset]))
             x_offset += step_size
+
+        self.send_scene_data()
 
     def set_debug_mode(self,enabled):
         for tank in self.tanks:
@@ -171,3 +188,5 @@ class Scene(QGraphicsScene):
             # Update each tank, and set the rotation to the ground angle
             tank.update(force,time)
             tank.rotate(angle)
+
+            self.send_scene_data()

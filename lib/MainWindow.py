@@ -65,6 +65,8 @@ class MainWindow(QMainWindow):
         self.settings_visible = True
         self.settings.ui.expand_collapse_settings_button.clicked.connect(self.expand_collapse_settings)
 
+        self.scene.scene_data_signal.connect(self.settings.update_scene_data)
+
         self.ui.layout.addWidget(self.camera)
         self.ui.layout.addWidget(self.settings)
         self.show()
