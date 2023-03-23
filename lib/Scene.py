@@ -38,7 +38,7 @@ class Scene(QGraphicsScene):
     def send_scene_data(self):
         self.scene_data.tank_count = len(self.tanks)
         self.scene_data.shell_count = len(self.shells)
-        # self.scene_data.current_player = self.tanks[self.]
+        self.scene_data.current_player = self.tanks[self.current_player_idx].name
         self.scene_data_signal.emit(self.scene_data)
 
     def initialize_scene(self,num_tanks,max_vel):        
@@ -102,7 +102,7 @@ class Scene(QGraphicsScene):
             rand_y = randint(0,self.boundary_size[1])
             pose = np.array([rand_x,rand_y])
         
-        name = 'kurt'
+        name = f'Tank{len(self.tanks)+1}'
         tank = Tank(self.boundary_size,name,uuid.uuid4(),1.0,max_vel,pose)
         tank.shell_fired_signal.connect(self.shell_fired)
         self.tanks.append(tank)

@@ -296,6 +296,13 @@ class Tank(QWidget):
             angle = 0.0
         self.barrel.setRotation(angle)
         self.barrel_angle = angle
+    
+    def set_power(self,direction):
+        self.power += direction * .1
+        if self.power > 1.0:
+            self.power = 1.0
+        elif self.power < 0.1:
+            self.power = 0.1
 
     def update_health_bar(self):
         self.health_bar.setRect(-self.body_width/2,-40,self.hitpoints_remaining*.25,4)

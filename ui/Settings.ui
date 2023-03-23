@@ -508,6 +508,15 @@ font:  bold 10pt;</string>
            <property name="text">
             <string>Fire</string>
            </property>
+           <property name="autoRepeat">
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>10</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>10</number>
+           </property>
           </widget>
          </item>
          <item row="1" column="1">
@@ -516,7 +525,13 @@ font:  bold 10pt;</string>
             <string>Barrel Up</string>
            </property>
            <property name="autoRepeat">
-            <bool>false</bool>
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>10</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>10</number>
            </property>
           </widget>
          </item>
@@ -526,7 +541,13 @@ font:  bold 10pt;</string>
             <string>Barrel Down</string>
            </property>
            <property name="autoRepeat">
-            <bool>false</bool>
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>10</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>10</number>
            </property>
           </widget>
          </item>
@@ -536,7 +557,13 @@ font:  bold 10pt;</string>
             <string>Drive Left</string>
            </property>
            <property name="autoRepeat">
-            <bool>false</bool>
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>10</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>10</number>
            </property>
           </widget>
          </item>
@@ -546,7 +573,13 @@ font:  bold 10pt;</string>
             <string>Drive Right</string>
            </property>
            <property name="autoRepeat">
-            <bool>false</bool>
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>10</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>10</number>
            </property>
           </widget>
          </item>
@@ -555,12 +588,30 @@ font:  bold 10pt;</string>
            <property name="text">
             <string>Power Down</string>
            </property>
+           <property name="autoRepeat">
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>250</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>100</number>
+           </property>
           </widget>
          </item>
          <item row="2" column="1">
           <widget class="QPushButton" name="power_up_button">
            <property name="text">
             <string>Power Up</string>
+           </property>
+           <property name="autoRepeat">
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>250</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>100</number>
            </property>
           </widget>
          </item>

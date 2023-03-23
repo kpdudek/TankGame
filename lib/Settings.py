@@ -27,6 +27,48 @@ class Settings(QWidget):
         self.ui.log_fps_checkbox.stateChanged.connect(self.toggle_fps_log)
         self.ui.debug_mode_checkbox.stateChanged.connect(self.toggle_debug_mode)
         self.ui.reset_button.clicked.connect(self.reset_simulation)
+        self.ui.power_down_button.clicked.connect(self.power_down)
+        self.ui.power_up_button.clicked.connect(self.power_up)
+        self.ui.drive_left_button.clicked.connect(self.drive_left)
+        self.ui.drive_right_button.clicked.connect(self.drive_right)
+        self.ui.barrel_up_button.clicked.connect(self.barrel_up)
+        self.ui.barrel_down_button.clicked.connect(self.barrel_down)
+        self.ui.fire_button.clicked.connect(self.fire_shell)
+
+    def fire_shell(self):
+        if len(self.scene.tanks) <= 0:
+            return
+        self.scene.tanks[self.scene.current_player_idx].fire_shell()
+
+    def barrel_up(self):
+        if len(self.scene.tanks) <= 0:
+            return
+        self.scene.tanks[self.scene.current_player_idx].rotate_barrel(-1)
+
+    def barrel_down(self):
+        if len(self.scene.tanks) <= 0:
+            return
+        self.scene.tanks[self.scene.current_player_idx].rotate_barrel(1)
+
+    def drive_left(self):
+        if len(self.scene.tanks) <= 0:
+            return
+        self.scene.tanks[self.scene.current_player_idx].drive(-1)
+    
+    def drive_right(self):
+        if len(self.scene.tanks) <= 0:
+            return
+        self.scene.tanks[self.scene.current_player_idx].drive(1)
+
+    def power_up(self):
+        if len(self.scene.tanks) <= 0:
+            return
+        self.scene.tanks[self.scene.current_player_idx].set_power(1)
+
+    def power_down(self):
+        if len(self.scene.tanks) <= 0:
+            return
+        self.scene.tanks[self.scene.current_player_idx].set_power(-1)
 
     def update_scene_data(self,scene_data:SceneData):
         self.ui.tank_count_label.setText(str(scene_data.tank_count))
