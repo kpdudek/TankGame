@@ -203,6 +203,7 @@ class Tank(QWidget):
         entity_str += f'       Power: {self.power:.2f}\n'
         entity_str += f'   Fuel Left: {self.fuel_remaining:.2f}\n'
         entity_str += f' Health Left: {self.hitpoints_remaining:.2f}\n'
+        entity_str += f'  Shell Type: {self.shell_type}\n'
         entity_str += f'  Shots Left: {self.shots_remaining}\n'
         return entity_str
 

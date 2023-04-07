@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
         self.fps_log_timer.timeout.connect(self.fps_log)
 
         self.scene = Scene(self.boundary_size)
+        self.scene.shutdown_signal.connect(self.shutdown)
 
         self.camera = Camera()
         self.camera.setScene(self.scene)
@@ -181,6 +182,14 @@ class MainWindow(QMainWindow):
             if self.scene.current_player_idx > len(self.scene.tanks)-1:
                 self.scene.current_player_idx = 0
             self.scene.tanks[self.scene.current_player_idx].set_current_player(True)
+        elif key == Qt.Key_Period:
+            if len(self.scene.tanks) <= 0:
+                return
+            self.scene.tanks[self.scene.current_player_idx].set_power(1)
+        elif key == Qt.Key_Comma:
+            if len(self.scene.tanks) <= 0:
+                return
+            self.scene.tanks[self.scene.current_player_idx].set_power(-1)
         elif not event.isAutoRepeat():
             self.keys_pressed.append(key)
     

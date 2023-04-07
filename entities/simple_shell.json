@@ -5,11 +5,11 @@
     "maintain_aspect":true,
     "pose":[0.0,0.0],
     "mass":1.0,
-    "max_vel": 200,
+    "max_vel": 250,
     "damage": 20,
     "blast_radius": 50,
     "armour_penetration": 0.2,
-    "launch_force": 200,
+    "launch_force": 1500,
     "fire_rate": 1,
     "capacity": 5
 }

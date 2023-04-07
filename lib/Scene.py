@@ -129,6 +129,13 @@ class Scene(QGraphicsScene):
     def update(self,time):
         self.gravity = np.array([0,50.8])
 
+        if len(self.tanks) == 0:
+            self.logger.error('No tanks left!')
+            self.shutdown_signal.emit()
+        elif len(self.tanks) == 1:
+            self.logger.info(f'Tank {self.tanks[0].name} won!')
+            self.shutdown_signal.emit()
+
         # Loop over every shell, update it's position, and check what they collide with
         for idx,shell in enumerate(self.shells):
             force = self.gravity
