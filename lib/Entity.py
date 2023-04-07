@@ -75,13 +75,12 @@ class Map(object):
         self.pixmap = QGraphicsPolygonItem(polygon)
         self.pixmap.setBrush(QtGui.QBrush(QtGui.QColor('#78C13B')))
 
-    def get_segment_angle(self,x_pose):
-        for idx in range(self.size-1):
+    def get_segment_angle(self,x_pose,current_angle):
+        for idx in range(self.size):
             if x_pose >= self.vertices[0,idx] and x_pose < self.vertices[0,idx+1]:
                 angle = edge_angle(self.vertices[:,idx].copy(),self.vertices[:,idx+1].copy(),np.array([self.vertices[0,idx]+200,self.vertices[1,idx]]))
                 return angle
-        angle = edge_angle(self.vertices[:,idx-1].copy(),self.vertices[:,idx].copy(),np.array([self.vertices[0,idx-1]+200,self.vertices[1,idx-1]]))
-        return angle
+        return current_angle
 
 class Shell(QWidget):
     def __init__(self,id,starting_pose,theta,power,parent_tank):
@@ -317,10 +316,7 @@ class Tank(QWidget):
             drive_x = math.cos(self.ground_angle) * drive_force
             drive_y = -1 * math.sin(self.ground_angle) * drive_force
             self.steering_force = direction * np.array([drive_x,drive_y])
-        else:
-            self.steering_force = np.array([100.0*direction,0.0])
-
-        self.fuel_remaining -= 1.0
+            self.fuel_remaining -= 1.0
     
     def reload(self,shell_type):
         self.shell_type = shell_type

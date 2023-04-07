@@ -166,7 +166,7 @@ class Scene(QGraphicsScene):
                     tank.touching_ground = True
 
             # Calculate the ground angle
-            angle = self.terrain.get_segment_angle(tank.physics.center_pose[0].copy())
+            angle = self.terrain.get_segment_angle(tank.physics.center_pose[0].copy(),tank.ground_angle)
             tank.ground_angle = angle
             
             # If in debug mode, log extra
