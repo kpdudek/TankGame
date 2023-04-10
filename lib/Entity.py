@@ -344,13 +344,13 @@ class Tank(QWidget):
         if self.hitpoints_remaining <= 0:
             self.hitpoints_remaining = 0.0
         self.update_health_bar()
+        self.logger.info(f'{self.name} health remaining: {self.hitpoints_remaining}')
 
     def update(self,force,time):
         resulting_force = self.steering_force + force
         
         self.physics.update(resulting_force,time)            
         pose = self.physics.position.copy()
-        # self.pixmap.setRotation(degrees(-self.physics.theta))
         self.pixmap.setPos(pose[0],pose[1])
 
         self.steering_force = np.zeros(2)

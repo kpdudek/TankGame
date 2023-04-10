@@ -137,40 +137,45 @@ class Scene(QGraphicsScene):
             self.shutdown_signal.emit()
 
         # Loop over every shell, update it's position, and check what they collide with
-        for idx,shell in enumerate(self.shells):
+        for shell in self.shells:
             force = self.gravity
             shell.update(force,time)
             self.delete = False
-            for item in self.collidingItems(shell.pixmap):
-                if item in self.tank_pixmaps:
-                    idx = self.tank_pixmaps.index(item)
-                    self.logger.info(f'Shell [{shell.type}] collided with tank [{self.tanks[idx].name}]')
-                    self.tanks[idx].hit_by(shell)
-                    self.delete = True
-                    if self.tanks[idx].hitpoints_remaining <= 0:
-                        self.remove_tank(self.tanks[idx])
-                elif item == self.terrain.pixmap:
-                    self.logger.info(f'Shell [{shell.type}] collided with map [{self.terrain.name}]')
-                    self.delete = True
+            colliding_items = self.collidingItems(shell.pixmap)
+
+            if self.terrain.pixmap in colliding_items:
+                self.logger.info(f'Shell [{shell.type}] collided with map [{self.terrain.name}]')
+                self.delete = True
+            else:
+                for tank in self.tanks:
+                    if tank.pixmap in colliding_items or tank.body in colliding_items:
+                        self.logger.info(f'Shell [{shell.type}] collided with tank [{tank.name}]')
+                        tank.hit_by(shell)
+                        self.delete = True
+                        if tank.hitpoints_remaining <= 0:
+                            self.remove_tank(tank)
             if self.delete:
                 self.removeItem(shell.pixmap)
                 self.shells.remove(shell)
         
         # Loop over every tank, check what it collides with, and update it's position
-        for idx,tank in enumerate(self.tanks):        
+        for tank in self.tanks:        
             collisions = []
             collision_names = []
             tank.touching_ground = False
-            for item in self.collidingItems(tank.body):
-                if item in self.tank_pixmaps:
-                    collisions.append(item)
-                    idx = self.tank_pixmaps.index(item)
-                    collision_names.append(self.tanks[idx].name)
-                elif item == self.terrain.pixmap:
-                    collisions.append(item)
-                    collision_names.append(self.terrain.name)
-                    tank.physics.velocity = np.zeros(2)
-                    tank.touching_ground = True
+            colliding_items = self.collidingItems(tank.body)
+
+            if self.terrain.pixmap in colliding_items:
+                collisions.append(self.terrain.pixmap)
+                collision_names.append(self.terrain.name)
+                tank.physics.velocity = np.zeros(2)
+                tank.touching_ground = True
+            for other_tank in self.tanks:
+                if other_tank.id == tank.id:
+                    pass
+                elif other_tank.pixmap in colliding_items:
+                    collisions.append(other_tank.pixmap)
+                    collision_names.append(other_tank.name)
 
             # Calculate the ground angle
             angle = self.terrain.get_segment_angle(tank.physics.center_pose[0].copy(),tank.ground_angle)
@@ -187,7 +192,7 @@ class Scene(QGraphicsScene):
                 self.logger.debug(f"\tIn collision with: {collision_names}")
             
             # If the tank hit the terrain, apply no forces
-            if self.terrain.pixmap in collisions:
+            if tank.touching_ground:
                 force = np.zeros(2)
             else:
                 force = self.gravity
