@@ -106,7 +106,7 @@ class Scene(QGraphicsScene):
         tank = Tank(self.boundary_size,name,uuid.uuid4(),1.0,max_vel,pose)
         tank.shell_fired_signal.connect(self.shell_fired)
         self.tanks.append(tank)
-        self.tank_pixmaps.append(tank.pixmap)
+        self.tank_pixmaps.append(tank.body)
         self.addItem(tank.pixmap)
         self.update_window_text()
     
@@ -161,7 +161,7 @@ class Scene(QGraphicsScene):
             collisions = []
             collision_names = []
             tank.touching_ground = False
-            for item in self.collidingItems(tank.pixmap):
+            for item in self.collidingItems(tank.body):
                 if item in self.tank_pixmaps:
                     collisions.append(item)
                     idx = self.tank_pixmaps.index(item)

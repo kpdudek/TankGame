@@ -48,7 +48,7 @@ class Map(object):
 
     def generate_terrain(self):
         self.logger.debug(f'Boundary size: {self.boundary_size}')
-        self.size = 20
+        self.size = 26
         self.top_mesh = generate_perlin_noise_2d(np.array([1,self.size]),np.array([1,2]))
         self.top_mesh += 1.0
         self.top_mesh = self.top_mesh / 2.0
