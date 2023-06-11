@@ -95,8 +95,10 @@ class Settings(QWidget):
 
     def reset_simulation(self):
         num_tanks = self.ui.tank_count_spinbox.value()
+        num_ai = self.ui.ai_count_spinbox.value()
         max_vel = self.ui.max_speed_spinbox.value()
-        self.scene.initialize_scene(num_tanks,max_vel)
+        map_type = self.ui.map_type_combobox.currentText()
+        self.scene.initialize_scene(map_type,num_tanks,num_ai,max_vel)
         self.toggle_debug_mode()
         self.toggle_fps_log()
 

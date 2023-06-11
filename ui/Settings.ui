@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1134</width>
-    <height>222</height>
+    <height>292</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -138,40 +138,52 @@ font:  bold 10pt;</string>
          <property name="bottomMargin">
           <number>9</number>
          </property>
-         <item row="7" column="0" colspan="2">
-          <widget class="QPushButton" name="reset_button">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
+         <item row="2" column="1">
+          <widget class="QFrame" name="frame_6">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
-           <property name="text">
-            <string>New Game</string>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
            </property>
-          </widget>
-         </item>
-         <item row="5" column="0">
-          <widget class="QCheckBox" name="log_fps_checkbox">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
+           <property name="frameShadow">
+            <enum>QFrame::Plain</enum>
            </property>
-           <property name="text">
-            <string>Log FPS</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="1">
-          <widget class="QCheckBox" name="debug_mode_checkbox">
-           <property name="font">
-            <font>
-             <pointsize>11</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Debug mode</string>
-           </property>
+           <layout class="QGridLayout" name="gridLayout_8">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item row="0" column="1">
+             <widget class="QSpinBox" name="tank_count_spinbox">
+              <property name="font">
+               <font>
+                <pointsize>11</pointsize>
+               </font>
+              </property>
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>500</number>
+              </property>
+              <property name="value">
+               <number>1</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
          <item row="4" column="1">
@@ -225,59 +237,40 @@ font:  bold 10pt;</string>
            </layout>
           </widget>
          </item>
-         <item row="6" column="0" colspan="2">
-          <widget class="Line" name="line">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+         <item row="7" column="0">
+          <widget class="QCheckBox" name="log_fps_checkbox">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Log FPS</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QFrame" name="frame_6">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+         <item row="9" column="0" colspan="2">
+          <widget class="QPushButton" name="reset_button">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
            </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
+           <property name="text">
+            <string>New Game</string>
            </property>
-           <property name="frameShadow">
-            <enum>QFrame::Plain</enum>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QCheckBox" name="debug_mode_checkbox">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
            </property>
-           <layout class="QGridLayout" name="gridLayout_8">
-            <property name="leftMargin">
-             <number>0</number>
-            </property>
-            <property name="topMargin">
-             <number>0</number>
-            </property>
-            <property name="rightMargin">
-             <number>0</number>
-            </property>
-            <property name="bottomMargin">
-             <number>0</number>
-            </property>
-            <item row="0" column="1">
-             <widget class="QSpinBox" name="tank_count_spinbox">
-              <property name="font">
-               <font>
-                <pointsize>11</pointsize>
-               </font>
-              </property>
-              <property name="minimum">
-               <number>1</number>
-              </property>
-              <property name="maximum">
-               <number>500</number>
-              </property>
-              <property name="value">
-               <number>2</number>
-              </property>
-             </widget>
-            </item>
-           </layout>
+           <property name="text">
+            <string>Debug mode</string>
+           </property>
           </widget>
          </item>
          <item row="1" column="0" colspan="2">
@@ -303,6 +296,13 @@ font:  bold 10pt;</string>
            </property>
            <property name="text">
             <string>New Game:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0" colspan="2">
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
@@ -362,7 +362,67 @@ font:  bold 10pt;</string>
             </font>
            </property>
            <property name="text">
-            <string>Number of Tanks: </string>
+            <string>Number of Players: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" colspan="2">
+          <widget class="QComboBox" name="game_difficulty_combobox">
+           <item>
+            <property name="text">
+             <string>Easy</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Medium</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Hard</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Impossible</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="6" column="0" colspan="2">
+          <widget class="QComboBox" name="map_type_combobox">
+           <item>
+            <property name="text">
+             <string>Flat</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Peak</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Perlin</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_15">
+           <property name="text">
+            <string>Number of AI:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QSpinBox" name="ai_count_spinbox">
+           <property name="maximum">
+            <number>10</number>
+           </property>
+           <property name="value">
+            <number>1</number>
            </property>
           </widget>
          </item>
@@ -370,7 +430,7 @@ font:  bold 10pt;</string>
        </widget>
       </item>
       <item>
-       <widget class="QFrame" name="flocking_settings">
+       <widget class="QFrame" name="game_details_frame">
         <property name="minimumSize">
          <size>
           <width>0</width>
@@ -495,6 +555,86 @@ font:  bold 10pt;</string>
        </widget>
       </item>
       <item>
+       <widget class="QFrame" name="player_details_frame">
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Plain</enum>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Remaining Shells: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Current Player Details:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Selected Shell: </string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_13">
+           <property name="text">
+            <string>Armour Rating:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_14">
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QFrame" name="frame_2">
         <property name="frameShape">
          <enum>QFrame::Box</enum>
@@ -503,10 +643,10 @@ font:  bold 10pt;</string>
          <enum>QFrame::Plain</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="3" column="0" colspan="2">
+         <item row="4" column="1" colspan="2">
           <widget class="QPushButton" name="fire_button">
            <property name="text">
-            <string>Fire</string>
+            <string>Fire!</string>
            </property>
            <property name="autoRepeat">
             <bool>true</bool>
@@ -519,7 +659,7 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
+         <item row="1" column="2">
           <widget class="QPushButton" name="barrel_up_button">
            <property name="text">
             <string>Barrel Up</string>
@@ -535,7 +675,7 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
+         <item row="1" column="1">
           <widget class="QPushButton" name="barrel_down_button">
            <property name="text">
             <string>Barrel Down</string>
@@ -551,39 +691,7 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="drive_left_button">
-           <property name="text">
-            <string>Drive Left</string>
-           </property>
-           <property name="autoRepeat">
-            <bool>true</bool>
-           </property>
-           <property name="autoRepeatDelay">
-            <number>10</number>
-           </property>
-           <property name="autoRepeatInterval">
-            <number>10</number>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QPushButton" name="drive_right_button">
-           <property name="text">
-            <string>Drive Right</string>
-           </property>
-           <property name="autoRepeat">
-            <bool>true</bool>
-           </property>
-           <property name="autoRepeatDelay">
-            <number>10</number>
-           </property>
-           <property name="autoRepeatInterval">
-            <number>10</number>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
+         <item row="2" column="1">
           <widget class="QPushButton" name="power_down_button">
            <property name="text">
             <string>Power Down</string>
@@ -599,7 +707,23 @@ font:  bold 10pt;</string>
            </property>
           </widget>
          </item>
-         <item row="2" column="1">
+         <item row="0" column="1">
+          <widget class="QPushButton" name="drive_left_button">
+           <property name="text">
+            <string>Drive Left</string>
+           </property>
+           <property name="autoRepeat">
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>10</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
           <widget class="QPushButton" name="power_up_button">
            <property name="text">
             <string>Power Up</string>
@@ -612,6 +736,29 @@ font:  bold 10pt;</string>
            </property>
            <property name="autoRepeatInterval">
             <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QPushButton" name="drive_right_button">
+           <property name="text">
+            <string>Drive Right</string>
+           </property>
+           <property name="autoRepeat">
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeatDelay">
+            <number>10</number>
+           </property>
+           <property name="autoRepeatInterval">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" colspan="2">
+          <widget class="QPushButton" name="switch_shells_button">
+           <property name="text">
+            <string>Switch Shells</string>
            </property>
           </widget>
          </item>

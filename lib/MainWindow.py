@@ -48,8 +48,9 @@ class MainWindow(QMainWindow):
         self.fps_log_timer = QTimer()
         self.fps_log_timer.timeout.connect(self.fps_log)
 
-        self.scene = Scene(self.boundary_size)
+        self.scene = Scene(self,self.boundary_size)
         self.scene.shutdown_signal.connect(self.shutdown)
+        self.scene.new_game_signal.connect(self.new_game)
 
         self.camera = Camera()
         self.camera.setScene(self.scene)
@@ -76,6 +77,10 @@ class MainWindow(QMainWindow):
         self.frame_idx = 0
         self.game_timer.start(1000/self.fps)
 
+    def new_game(self):
+        self.logger.info(f'Starting new game...')
+        self.settings.reset_simulation()
+
     def reset_simulation(self):
         self.frame_idx = 0
 
@@ -95,19 +100,11 @@ class MainWindow(QMainWindow):
 
         if self.button == 1: # Left click
             for tank in self.scene.tanks:
-                if tank.pixmap.isUnderMouse():
+                if tank.pixmap.isUnderMouse() or tank.body.isUnderMouse():
                     self.selected_tanks.append(tank)
                     self.selected_offset = tank.physics.center_pose - pose_scene
                     tank.teleport(pose_scene+self.selected_offset)
                     tank.physics.lock = True
-            if len(self.selected_tanks) > 0:
-                return
-            # pose_scene = self.camera.mapToScene(pose[0],pose[1])
-            # pose_scene = np.array([pose_scene.x(),pose_scene.y()])
-            max_vel = self.settings.ui.max_speed_spinbox.value()
-            self.scene.spawn_tank(max_vel,pose_scene)
-            self.scene.tanks[-1].set_debug_mode(self.debug_mode)
-            self.scene.tanks[-1].physics.lock = True
         elif self.button == 2: # Right click
             for tank in self.scene.tanks:
                 if tank.pixmap.isUnderMouse():
@@ -125,7 +122,6 @@ class MainWindow(QMainWindow):
                 for tank in self.selected_tanks:
                     tank.teleport(pose_scene+self.selected_offset)
                 return
-            # theta = edge_angle(np.zeros(2),pose_scene-self.mouse_press,np.array([100.0,0.0]))
         elif self.button == 2: # Right click
            pass
         elif self.button == 4: # Wheel click
@@ -143,9 +139,6 @@ class MainWindow(QMainWindow):
                     tank.physics.lock = False
                 self.selected_tanks = []
                 return
-            velocity = pose_scene-self.mouse_press
-            self.scene.tanks[-1].physics.velocity = velocity
-            self.scene.tanks[-1].physics.lock = False
         elif self.button == 2: # Right click
             pass
         elif self.button == 4: # Wheel click
@@ -177,11 +170,11 @@ class MainWindow(QMainWindow):
         elif key == Qt.Key_N:
             if len(self.scene.tanks) <= 0:
                 return
-            self.scene.tanks[self.scene.current_player_idx].set_current_player(False)
-            self.scene.current_player_idx += 1
-            if self.scene.current_player_idx > len(self.scene.tanks)-1:
-                self.scene.current_player_idx = 0
-            self.scene.tanks[self.scene.current_player_idx].set_current_player(True)
+            self.scene.next_player()
+        elif key == Qt.Key_T:
+            if len(self.scene.tanks) <= 0:
+                return
+            self.scene.tanks[self.scene.current_player_idx].change_shell_type()
         elif key == Qt.Key_Period:
             if len(self.scene.tanks) <= 0:
                 return

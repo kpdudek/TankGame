@@ -1,15 +1,15 @@
 {
-    "type":"simple_shell",
+    "type":"nuke",
     "png_file":"",
     "png_scale":[1.0,1.0],
     "maintain_aspect":true,
     "pose":[0.0,0.0],
     "mass":1.0,
     "max_vel": 450,
-    "damage": 20,
-    "blast_radius": 50,
+    "damage": 150,
+    "blast_radius": 200,
     "armour_penetration": 1.0,
-    "fire_rate": 3,
-    "capacity": 5,
-    "max_scatter": 3.0
+    "fire_rate": 1,
+    "capacity": 1,
+    "max_scatter":0.0
 }

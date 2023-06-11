@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 
+from lib.Utils import initialize_logger, set_logging_level
 from PyQt5.QtWidgets import QApplication
-from lib.Utils import initialize_logger
 from lib.MainWindow import MainWindow
 import sys
 
 def main():
     debug_mode = False
     cl_args = sys.argv[1:]
+    logger = initialize_logger(level="INFO")
+    logger.info(f"Game starting with options: {cl_args}")
+
     if "-d" in cl_args:
-        logger = initialize_logger(level="DEBUG")
+        cl_args.remove("-d")
+        set_logging_level("DEBUG")
         debug_mode = True
     else:
-        logger = initialize_logger(level="INFO")
-    logger.info(f"Game starting with options: {cl_args}")
+        set_logging_level("INFO")
     
     app = QApplication(sys.argv)
     screen_resolution = app.desktop().screenGeometry()

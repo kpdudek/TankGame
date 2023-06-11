@@ -1,15 +1,15 @@
 {
-    "type":"simple_shell",
+    "type":"burst",
     "png_file":"",
     "png_scale":[1.0,1.0],
     "maintain_aspect":true,
     "pose":[0.0,0.0],
     "mass":1.0,
     "max_vel": 450,
-    "damage": 20,
-    "blast_radius": 50,
+    "damage": 5,
+    "blast_radius": 10,
     "armour_penetration": 1.0,
-    "fire_rate": 3,
-    "capacity": 5,
-    "max_scatter": 3.0
+    "fire_rate": 50,
+    "capacity": 25,
+    "max_scatter": 5.0
 }

@@ -3,6 +3,7 @@
 from PyQt5.QtWidgets import QGraphicsScene, QGraphicsRectItem, QGraphicsTextItem
 from lib.Utils import initialize_logger, FilePaths
 from PyQt5.QtWidgets import QGraphicsPixmapItem
+from lib.GameOverDialog import GameOverDialog
 from PyQt5.QtGui import QPen, QBrush, QColor
 from lib.Entity import Tank, Map, Shell
 from PyQt5.QtCore import Qt
@@ -10,7 +11,7 @@ from random import randint
 from PyQt5 import QtCore
 from typing import List
 import numpy as np
-import uuid
+import uuid, math
 
 class SceneData():
     def __init__(self):
@@ -21,18 +22,18 @@ class SceneData():
 class Scene(QGraphicsScene):
     shutdown_signal = QtCore.pyqtSignal()
     scene_data_signal = QtCore.pyqtSignal(SceneData)
+    new_game_signal = QtCore.pyqtSignal()
 
-    def __init__(self,boundary_size):
+    def __init__(self,main_window,boundary_size):
         super().__init__()
         self.logger = initialize_logger()
         self.file_paths = FilePaths()
 
         self.debug_mode = False
+        self.main_window = main_window
         self.boundary_size = boundary_size
         self.current_player_idx = 0
-
         self.setBackgroundBrush(QBrush(QColor('#5ADCEC')))
-
         self.scene_data = SceneData()
 
     def send_scene_data(self):
@@ -41,9 +42,12 @@ class Scene(QGraphicsScene):
         self.scene_data.current_player = self.tanks[self.current_player_idx].name
         self.scene_data_signal.emit(self.scene_data)
 
-    def initialize_scene(self,num_tanks,max_vel):        
-        self.logger.info(f'Initializing scene with {num_tanks} tanks...')
+    def initialize_scene(self,map_type,num_tanks,num_ai,max_vel):        
+        self.logger.info(f'Initializing {map_type} scene with {num_tanks} tanks...')
         self.number_of_tanks = num_tanks
+        self.number_of_ai = num_ai
+        self.map_type = map_type
+        self.max_vel = max_vel
 
         # Remove all items
         items = self.items()
@@ -59,7 +63,7 @@ class Scene(QGraphicsScene):
         self.shell_pixmaps = []
         
         # Create a new terrain object
-        self.terrain = Map(self.boundary_size,'map',uuid.uuid4())
+        self.terrain = Map(self.boundary_size,self.map_type,'map',uuid.uuid4())
         self.addItem(self.terrain.pixmap)
 
         # Draw the scene rect
@@ -76,11 +80,15 @@ class Scene(QGraphicsScene):
         self.addItem(self.boid_count_display)
 
         # Spawn starting tanks
-        step_size = 500.0
-        y_offset = 50.0
-        x_offset = y_offset
+        total_number_of_tanks = self.number_of_tanks+self.number_of_ai
+        step_size = self.boundary_size[0]/total_number_of_tanks
+        y_offset = self.terrain.tank_y_offset
+        x_offset = step_size/2
         for i in range(self.number_of_tanks):
             self.spawn_tank(max_vel,np.array([x_offset,y_offset]))
+            x_offset += step_size
+        for i in range(self.number_of_ai):
+            self.spawn_tank(max_vel,np.array([x_offset,y_offset]),is_ai=True)
             x_offset += step_size
 
         self.send_scene_data()
@@ -96,14 +104,14 @@ class Scene(QGraphicsScene):
         text = f"Tanks: {len(self.tanks)}\n"
         self.boid_count_display.setPlainText(text)
 
-    def spawn_tank(self,max_vel,pose):
+    def spawn_tank(self,max_vel,pose,is_ai=False):
         if not isinstance(pose,np.ndarray):
             rand_x = randint(0,self.boundary_size[0])
             rand_y = randint(0,self.boundary_size[1])
             pose = np.array([rand_x,rand_y])
         
         name = f'Tank{len(self.tanks)+1}'
-        tank = Tank(self.boundary_size,name,uuid.uuid4(),1.0,max_vel,pose)
+        tank = Tank(self.boundary_size,name,uuid.uuid4(),1.0,max_vel,pose,is_ai)
         tank.shell_fired_signal.connect(self.shell_fired)
         self.tanks.append(tank)
         self.tank_pixmaps.append(tank.body)
@@ -126,6 +134,14 @@ class Scene(QGraphicsScene):
             self.current_player_idx = 0
         self.boid_count_display.setPlainText(f"Tanks: {len(self.tanks)}")
 
+    def next_player(self):
+        self.tanks[self.current_player_idx].set_current_player(False)
+        self.current_player_idx += 1
+        if self.current_player_idx > len(self.tanks)-1:
+            self.current_player_idx = 0
+        self.tanks[self.current_player_idx].set_current_player(True)
+        self.logger.info(f'Tank {self.tanks[self.current_player_idx].name} is now the current player.')
+
     def update(self,time):
         self.gravity = np.array([0,50.8])
 
@@ -133,7 +149,14 @@ class Scene(QGraphicsScene):
             self.logger.error('No tanks left!')
             self.shutdown_signal.emit()
         elif len(self.tanks) == 1:
-            self.logger.info(f'Tank {self.tanks[0].name} won!')
+            winning_tank_str = f'{self.tanks[0].name} won!'
+            new_game_promt_str = f'Would you like to start a new game?'
+            self.logger.info(winning_tank_str)
+            game_over_dialog = GameOverDialog(winning_tank_str+'\n'+new_game_promt_str,self.main_window)
+            result = game_over_dialog.exec_()
+            if result:
+                self.new_game_signal.emit()
+                return
             self.shutdown_signal.emit()
 
         # Loop over every shell, update it's position, and check what they collide with
@@ -141,15 +164,23 @@ class Scene(QGraphicsScene):
             force = self.gravity
             shell.update(force,time)
             self.delete = False
-            colliding_items = self.collidingItems(shell.pixmap)
+            colliding_items = shell.pixmap.collidingItems()
 
             if self.terrain.pixmap in colliding_items:
                 self.logger.info(f'Shell [{shell.type}] collided with map [{self.terrain.name}]')
                 self.delete = True
+
+                blast_impacted = shell.debug_blast_radius.collidingItems()
+                for tank in self.tanks:
+                    if tank.pixmap in blast_impacted or tank.body in blast_impacted:
+                        self.logger.info(f'Shell [{shell.type}] blast radius affected tank [{tank.name}]')
+                        tank.hit_by(shell,direct_hit=False)
+                        if tank.hitpoints_remaining <= 0:
+                            self.remove_tank(tank)
             else:
                 for tank in self.tanks:
                     if tank.pixmap in colliding_items or tank.body in colliding_items:
-                        self.logger.info(f'Shell [{shell.type}] collided with tank [{tank.name}]')
+                        self.logger.info(f'Shell [{shell.type}] direct hit with tank [{tank.name}]')
                         tank.hit_by(shell)
                         self.delete = True
                         if tank.hitpoints_remaining <= 0:
@@ -159,7 +190,8 @@ class Scene(QGraphicsScene):
                 self.shells.remove(shell)
         
         # Loop over every tank, check what it collides with, and update it's position
-        for tank in self.tanks:        
+        self.logger.debug(f"Current player: {self.tanks[self.current_player_idx].name}")
+        for idx,tank in enumerate(self.tanks):        
             collisions = []
             collision_names = []
             tank.touching_ground = False
@@ -181,16 +213,6 @@ class Scene(QGraphicsScene):
             angle = self.terrain.get_segment_angle(tank.physics.center_pose[0].copy(),tank.ground_angle)
             tank.ground_angle = angle
             
-            # If in debug mode, log extra
-            if self.debug_mode:
-                self.logger.debug(f"Tank {tank.name}:")
-                self.logger.debug(f"\tID: {tank.id}")
-                self.logger.debug(f'\tOver terrain with angle {angle}')
-                self.logger.debug(f"\tPosition: {tank.physics.position}")
-                self.logger.debug(f"\tVelocity: {tank.physics.velocity}")
-                self.logger.debug(f"\tSteering force: {tank.steering_force}")
-                self.logger.debug(f"\tIn collision with: {collision_names}")
-            
             # If the tank hit the terrain, apply no forces
             if tank.touching_ground:
                 force = np.zeros(2)
@@ -198,7 +220,30 @@ class Scene(QGraphicsScene):
                 force = self.gravity
             
             # Update each tank, and set the rotation to the ground angle
-            tank.update(force,time)
             tank.rotate(angle)
+            tank.update(force,time)
+            # If in debug mode, log extra
+            if self.debug_mode:
+                self.logger.debug(f"Tank {tank.name}:")
+                self.logger.debug(f"\tID: {tank.id}")
+                self.logger.debug(f'\tOver terrain with angle: {math.degrees(angle)}')
+                self.logger.debug(f"\tPosition: {tank.physics.position}")
+                self.logger.debug(f"\tVelocity: {tank.physics.velocity}")
+                self.logger.debug(f"\tSteering force: {tank.steering_force}")
+                self.logger.debug(f"\tIn collision with: {collision_names}")
 
-            self.send_scene_data()
+            # Apply AI controls
+            if tank.is_currrent_player and tank.is_ai:
+                goal_idx = idx+1
+                if goal_idx >= len(self.tanks):
+                    goal_idx = 0
+                target_tank_pose = self.tanks[goal_idx].physics.position
+                tank.get_shell_tragectory(target_tank_pose)
+                tank.run_ai_turn()
+
+                # If the current tank is an ai, and all it's shells have exploded,
+                # advance to the next player
+                if tank.shots_remaining == 0 and len(self.shells) == 0:
+                    self.next_player()
+
+        self.send_scene_data()
