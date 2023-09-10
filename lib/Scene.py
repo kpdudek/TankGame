@@ -42,7 +42,7 @@ class Scene(QGraphicsScene):
         self.scene_data.current_player = self.tanks[self.current_player_idx].name
         self.scene_data_signal.emit(self.scene_data)
 
-    def initialize_scene(self,map_type,num_tanks,num_ai,max_vel):        
+    def initialize_scene(self,map_type,num_tanks,num_ai,ai_difficulty,max_vel):        
         self.logger.info(f'Initializing {map_type} scene with {num_tanks} tanks...')
         self.number_of_tanks = num_tanks
         self.number_of_ai = num_ai
@@ -75,9 +75,9 @@ class Scene(QGraphicsScene):
         self.addItem(self.rect)
         
         # Add the tank count overlay
-        self.boid_count_display = QGraphicsTextItem()
+        self.tank_count_display = QGraphicsTextItem()
         self.update_window_text()
-        self.addItem(self.boid_count_display)
+        self.addItem(self.tank_count_display)
 
         # Spawn starting tanks
         total_number_of_tanks = self.number_of_tanks+self.number_of_ai
@@ -88,7 +88,7 @@ class Scene(QGraphicsScene):
             self.spawn_tank(max_vel,np.array([x_offset,y_offset]))
             x_offset += step_size
         for i in range(self.number_of_ai):
-            self.spawn_tank(max_vel,np.array([x_offset,y_offset]),is_ai=True)
+            self.spawn_tank(max_vel,np.array([x_offset,y_offset]),is_ai=True,ai_difficulty=ai_difficulty)
             x_offset += step_size
 
         self.send_scene_data()
@@ -102,16 +102,16 @@ class Scene(QGraphicsScene):
     
     def update_window_text(self):
         text = f"Tanks: {len(self.tanks)}\n"
-        self.boid_count_display.setPlainText(text)
+        self.tank_count_display.setPlainText(text)
 
-    def spawn_tank(self,max_vel,pose,is_ai=False):
+    def spawn_tank(self,max_vel,pose,is_ai=False,ai_difficulty='Easy'):
         if not isinstance(pose,np.ndarray):
             rand_x = randint(0,self.boundary_size[0])
             rand_y = randint(0,self.boundary_size[1])
             pose = np.array([rand_x,rand_y])
         
         name = f'Tank{len(self.tanks)+1}'
-        tank = Tank(self.boundary_size,name,uuid.uuid4(),1.0,max_vel,pose,is_ai)
+        tank = Tank(self.boundary_size,name,uuid.uuid4(),1.0,max_vel,pose,is_ai=is_ai,ai_difficulty=ai_difficulty)
         tank.shell_fired_signal.connect(self.shell_fired)
         self.tanks.append(tank)
         self.tank_pixmaps.append(tank.body)
@@ -132,7 +132,7 @@ class Scene(QGraphicsScene):
         self.tank_pixmaps.pop(idx)
         if len(self.tanks) == 1:
             self.current_player_idx = 0
-        self.boid_count_display.setPlainText(f"Tanks: {len(self.tanks)}")
+        self.tank_count_display.setPlainText(f"Tanks: {len(self.tanks)}")
 
     def next_player(self):
         self.tanks[self.current_player_idx].set_current_player(False)

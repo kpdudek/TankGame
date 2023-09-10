@@ -200,15 +200,15 @@ class Shell(QWidget):
         self.pixmap.setPos(offset[0],offset[1])
 
     def rotate(self,angle):
-        self.physics.theta = angle
-        self.pixmap.setRotation(degrees(angle))
+        self.physics.theta = -angle
+        self.pixmap.setRotation(degrees(-angle))
 
     def update(self,force,time):
         resulting_force = self.steering_force + force
         
         self.physics.update(resulting_force,time)            
         pose = self.physics.position.copy()
-        self.rotate(self.physics.theta)
+        self.rotate(-self.physics.theta)
         self.pixmap.setPos(pose[0],pose[1])
 
         self.steering_force = np.zeros(2)
@@ -216,7 +216,7 @@ class Shell(QWidget):
 class Tank(QWidget):
     shell_fired_signal = pyqtSignal(Shell)
 
-    def __init__(self,boundary_size,name,id,mass,max_vel,starting_pose,is_ai):
+    def __init__(self,boundary_size,name,id,mass,max_vel,starting_pose,is_ai=False,ai_difficulty='Easy'):
         super().__init__()
         self.logger = initialize_logger()
         self.file_paths = FilePaths()
@@ -224,6 +224,15 @@ class Tank(QWidget):
         self.id = id
         self.name = name
         self.is_ai = is_ai
+        self.ai_difficulty = ai_difficulty
+        if self.ai_difficulty == 'Easy':
+            self.ai_difficulty_value = 0.15
+        elif self.ai_difficulty == 'Medium':
+            self.ai_difficulty_value = 0.1
+        elif self.ai_difficulty == 'Hard':
+            self.ai_difficulty_value = 0.05
+        elif self.ai_difficulty == 'Impossible':
+            self.ai_difficulty_value = 0.0
         self.config = None
         self.active_stats_str = ''
         self.boundary_size = boundary_size
@@ -263,6 +272,8 @@ class Tank(QWidget):
         entity_str += f' Health Left : {self.hitpoints_remaining:.2f}\n'
         entity_str += f'  Shell Type : {self.shell_type}\n'
         entity_str += f'  Shots Left : {self.shots_remaining}\n'
+        if self.is_ai:
+            entity_str += f'  Difficulty : {self.ai_difficulty}\n'
         return entity_str
 
     def load_config(self):
@@ -414,18 +425,18 @@ class Tank(QWidget):
         return math.degrees(theta)
     
     def get_shell_tragectory(self,goal_pose):
-        # If the tank is moving, stop the barrel and dont allow firing
-        # if np.sum(self.physics.velocity) > 0.1:
-        #     self.logger.debug(f'Tank still moving, so skipping ai step.')
-        #     self.barrel_setpoint = self.barrel_angle
-        #     self.target_locked = False
-        #     return
-        
         # Given the goal pose, solve for
         #   - shell type (drive closer to minimize spray)
         #   - tank position (get out of blast radius)
         #   - power (power down as you get closer)
         #   - barrel angle (find angle that will hit target)
+        
+        # # If the tank is moving, stop the barrel and dont allow firing
+        # if np.sum(self.physics.velocity) > 0.1:
+        #     self.logger.debug(f'Tank still moving, so skipping ai step.')
+        #     self.barrel_setpoint = self.barrel_angle
+        #     self.target_locked = False
+        #     return
         
         # Determine which side the goal is on (left or right) and set the global
         # barrel angle to 45 degrees off vertical
@@ -443,6 +454,7 @@ class Tank(QWidget):
         y_comp = (self.barrel_len)*math.sin(theta)
         barrel_tip = np.array([self.physics.position[0] + x_comp, self.physics.position[1]+self.barrel_offset+self.barrel_center + y_comp])
 
+        tic = time.time()
         best_error = 1000
         for power in np.linspace(0.05,1.0,100):
             launch_speed = power*self.max_initial_speed
@@ -454,7 +466,9 @@ class Tank(QWidget):
             if abs(time_error) < best_error:
                 best_error = time_error
                 self.power = power
+        toc = time.time()
         
+        self.logger.debug(f'Tragectory computed in {toc-tic} seconds.')
         self.logger.debug(f'Shell time error: {best_error}')
         self.logger.debug(f'Tragectory will hit peak Y {y_peak} in {t_peak} seconds')
         self.logger.debug(f'Descent will take {t_descent} seconds')
@@ -483,6 +497,7 @@ class Tank(QWidget):
             x_comp = (self.barrel_len)*math.cos(theta)
             y_comp = (self.barrel_len)*math.sin(theta)
             barrel_tip = np.array([self.physics.position[0] + x_comp, self.physics.position[1]+self.barrel_offset+self.barrel_center + y_comp])
+            self.power += (random()*2-1)*self.ai_difficulty_value 
             launch_speed = self.power*self.max_initial_speed
             shell = Shell(self.shell_type,uuid.uuid4(),barrel_tip,theta,launch_speed,self)
             self.shell_fired_signal.emit(shell)
@@ -502,7 +517,7 @@ class Tank(QWidget):
         if self.hitpoints_remaining <= 0:
             self.hitpoints_remaining = 0.0
         self.update_health_bar()
-        self.physics.update(np.array([-4000.,-4000.]),1.0/60.0)
+        # self.physics.update(np.array([-4000.,-4000.]),1.0/60.0)
         self.logger.info(f'{self.name} took {damage} damage from {shell.type}.')
         self.logger.info(f'{self.name} health remaining: {self.hitpoints_remaining}.')
 
